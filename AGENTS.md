@@ -24,7 +24,11 @@ pnpm install
 pnpm dev         # http://localhost:3000
 pnpm build
 pnpm typecheck   # next typegen && tsc --noEmit
-# Test, lint, format: not set up yet (/develop tooling and /test add them)
+pnpm check       # Biome lint, format, and import order check (what CI runs)
+pnpm check:fix   # same, but writes fixes
+pnpm lint        # Biome lint only
+pnpm format      # Biome format, writes changes
+# Test: not set up yet (/test adds it)
 ```
 
 ## Specs
@@ -46,7 +50,7 @@ Stored in `docs/specs/`. Format: `docs/specs/NNNN-title/index.md`.
 
 ## Tooling
 
-Chosen here, installed by `/develop tooling`. Nothing below is installed yet.
+Chosen here, installed by `/develop tooling`. Installed: Biome (`biome.json`), the Husky pre commit hook (`.husky/pre-commit`, runs lint-staged then typecheck), and CI (`.github/workflows/ci.yml`, no test step yet). Not installed yet: Vitest and Playwright (`/test` adds them).
 
 - Lint and format: Biome (one tool, one config file).
 - Before each commit: lint, format, and typecheck.
