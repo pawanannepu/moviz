@@ -14,7 +14,7 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | # | Feature | Phase | Status |
 |---|---------|-------|--------|
 | 1 | Stack & architecture | Foundation | done |
-| 2 | Coding standards & tooling | Foundation | planned |
+| 2 | Coding standards & tooling | Foundation | in-progress |
 | 3 | Data model | Foundation | planned |
 | 4 | Movie catalog | Foundation | planned |
 | 5 | Design system & UI foundation | Foundation | planned |
@@ -44,8 +44,9 @@ spec [0001](../specs/0001-stack-architecture/index.md) · code in `/` (project r
 ### 2. Coding standards & tooling
 Capture conventions, then install lint, format, and pre commit checks from the real scaffolded project.
 **Done when:** root `AGENTS.md` reflects the real stack, and lint, format, and pre commit hooks run clean.
-- [ ] Capture conventions and tooling choices: `/audit`
-- [ ] Install the tooling: `/develop tooling`
+code in `biome.json`, `.husky/`, `.github/workflows/ci.yml`
+- [x] Capture conventions and tooling choices: `/audit`
+- [x] Install the tooling: `/develop tooling`
 - [ ] Check it runs clean: `/test`
 
 ### 3. Data model · needs a decision
