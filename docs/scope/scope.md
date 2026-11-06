@@ -14,7 +14,7 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | # | Feature | Phase | Status |
 |---|---------|-------|--------|
 | 1 | Stack & architecture | Foundation | done |
-| 2 | Coding standards & tooling | Foundation | in-progress |
+| 2 | Coding standards & tooling | Foundation | done |
 | 3 | Data model | Foundation | planned |
 | 4 | Movie catalog | Foundation | planned |
 | 5 | Design system & UI foundation | Foundation | planned |
@@ -47,7 +47,7 @@ Capture conventions, then install lint, format, and pre commit checks from the r
 code in `biome.json`, `.husky/`, `.github/workflows/ci.yml`
 - [x] Capture conventions and tooling choices: `/audit`
 - [x] Install the tooling: `/develop tooling`
-- [ ] Check it runs clean: `/test`
+- [x] Check it runs clean: `/test`
 
 ### 3. Data model · needs a decision
 The core records every slice builds on: users, movies, ratings, taste signals, watchlist and seen entries, feed feedback, and import records.

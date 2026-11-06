@@ -1,0 +1,9 @@
+{
+  "tool": "vitest",
+  "gate": null,
+  "additionalTools": ["@axe-core/playwright"],
+  "e2eTool": "playwright",
+  "testDir": "beside the source (src/**), e2e/ for Playwright",
+  "filePattern": "*.test.ts",
+  "packageManager": "pnpm"
+}

@@ -28,7 +28,9 @@ pnpm check       # Biome lint, format, and import order check (what CI runs)
 pnpm check:fix   # same, but writes fixes
 pnpm lint        # Biome lint only
 pnpm format      # Biome format, writes changes
-# Test: not set up yet (/test adds it)
+pnpm test        # Vitest unit and integration (src/**/*.test.ts), exits 0 while no tests exist
+pnpm test:watch  # Vitest in watch mode
+pnpm test:e2e    # Playwright end to end and axe accessibility scans (e2e/*.spec.ts)
 ```
 
 ## Specs
@@ -50,12 +52,12 @@ Stored in `docs/specs/`. Format: `docs/specs/NNNN-title/index.md`.
 
 ## Tooling
 
-Chosen here, installed by `/develop tooling`. Installed: Biome (`biome.json`), the Husky pre commit hook (`.husky/pre-commit`, runs lint-staged then typecheck), and CI (`.github/workflows/ci.yml`, no test step yet). Not installed yet: Vitest and Playwright (`/test` adds them).
+Chosen here, installed by `/develop tooling`. Installed: Biome (`biome.json`), the Husky pre commit hook (`.husky/pre-commit`, runs lint-staged then typecheck), CI (`.github/workflows/ci.yml`, runs `pnpm test` but not Playwright yet), Vitest (`vitest.config.ts`), and Playwright (`playwright.config.ts`, Chromium only). Runner choices are saved in `test-preferences.json`. No tests exist yet.
 
 - Lint and format: Biome (one tool, one config file).
 - Before each commit: lint, format, and typecheck.
 - Testing: Vitest for unit and integration, Playwright with `@axe-core/playwright` for end to end and accessibility. Tests are written after building (Beta workflow: `/develop`, then `/check verify`, then `/test`). `/test` sets up the runner.
-- CI: GitHub Actions on every push and PR, running lint, typecheck, build, and test. Needs the GitHub remote first.
+- CI: GitHub Actions on every push and PR, running lint, typecheck, build, and test.
 
 ## Git
 
@@ -78,9 +80,12 @@ Pushes and PRs always ask first.
 - [pnpm](.claude/skills/pnpm/): `antfu/skills`, pnpm commands and config
 - [better-auth-best-practices](.claude/skills/better-auth-best-practices/): `better-auth/skills`, Better Auth setup (move to `src/auth/AGENTS.md` when that area exists)
 - [resend](.claude/skills/resend/): `resend/resend-skills`, Resend email API (move to `src/email/AGENTS.md` when that area exists)
+- [vitest](.claude/skills/vitest/): `antfu/skills`, Vitest unit and integration tests
+- [playwright-best-practices](.claude/skills/playwright-best-practices/): `currents-dev/playwright-best-practices-skill`, Playwright tests, including axe accessibility checks
+- [playwright-cli](.claude/skills/playwright-cli/): `microsoft/playwright-cli`, driving a real browser from the command line
 
 Declined: Vercel MCP, Next.js DevTools MCP, shadcn MCP
-MCP servers: Neon (recommended, connect it yourself, use read only mode on production data)
+MCP servers: Neon (recommended, connect it yourself, use read only mode on production data), Playwright MCP (recommended, connect it yourself)
 
 ## Context files
 

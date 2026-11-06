@@ -9,6 +9,7 @@
     "includes": [
       "**",
       "!.claude",
+      "!.agents",
       "!docs",
       "!pnpm-lock.yaml",
       "!tsconfig.tsbuildinfo"

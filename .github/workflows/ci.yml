@@ -26,4 +26,6 @@ jobs:
         run: pnpm typecheck
       - name: Build
         run: pnpm build
-      # Test step arrives with /test, once Vitest and Playwright are set up.
+      - name: Unit tests
+        run: pnpm test
+      # E2E (pnpm test:e2e) joins here once the first Playwright spec exists.
