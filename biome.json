@@ -11,6 +11,7 @@
       "!.claude",
       "!.agents",
       "!docs",
+      "!public/tmdb-logo.svg",
       "!pnpm-lock.yaml",
       "!tsconfig.tsbuildinfo"
     ]

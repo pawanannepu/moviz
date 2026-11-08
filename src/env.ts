@@ -4,6 +4,12 @@ import { z } from "zod";
  * The one place `process.env` is read. Server only: never import this from a
  * client component. Each feature adds its own names here and to `.env.example`.
  */
+/** A key that may be absent. A blank value (`NAME=`) counts as absent. */
+const optionalSecret = z.preprocess(
+  (value) => (value === "" ? undefined : value),
+  z.string().optional(),
+);
+
 const envSchema = z.object({
   /** Neon pooled connection string, used by the running app. */
   DATABASE_URL: z.url(),
@@ -15,6 +21,12 @@ const envSchema = z.object({
   BETTER_AUTH_SECRET: z.string().min(32).optional(),
   /** Public base URL of the app. Feature 6 makes it required. */
   BETTER_AUTH_URL: z.url().optional(),
+  /** TMDB API Read Access Token. Catalog sync (spec 0003) checks it when it runs. */
+  TMDB_API_TOKEN: optionalSecret,
+  /** Voyage AI key for embeddings. Catalog embedding (spec 0003) checks it when it runs. */
+  VOYAGE_API_KEY: optionalSecret,
+  /** Bearer token Vercel sends to cron routes. The route fails closed when unset. */
+  CRON_SECRET: optionalSecret,
 });
 
 export type Env = z.infer<typeof envSchema>;

@@ -16,7 +16,9 @@
     "check:fix": "biome check --write .",
     "prepare": "husky",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "catalog:seed": "tsx --env-file=.env.local scripts/catalog-seed.ts",
+    "embed:catalog": "tsx --env-file=.env.local scripts/embed-catalog.ts"
   },
   "dependencies": {
     "better-auth": "^1.7.18",

@@ -1,0 +1,73 @@
+{
+  "id": 949,
+  "adult": false,
+  "title": "Heat",
+  "original_title": "Heat",
+  "overview": "A veteran thief leads a precise crew of robbers while a driven detective closes in on them across Los Angeles.",
+  "tagline": "A Los Angeles crime saga",
+  "release_date": "1995-12-15",
+  "poster_path": "/fixture-heat-poster.jpg",
+  "runtime": 170,
+  "original_language": "en",
+  "popularity": 42.5,
+  "vote_average": 7.9,
+  "vote_count": 7000,
+  "genres": [
+    { "id": 28, "name": "Action" },
+    { "id": 80, "name": "Crime" },
+    { "id": 18, "name": "Drama" }
+  ],
+  "credits": {
+    "cast": [
+      {
+        "id": 1001,
+        "name": "Fixture Actor One",
+        "character": "Lead Thief",
+        "order": 0,
+        "profile_path": "/fixture-actor-one.jpg"
+      },
+      {
+        "id": 1002,
+        "name": "Fixture Actor Two",
+        "character": "Lead Detective",
+        "order": 1,
+        "profile_path": null
+      },
+      {
+        "id": 1003,
+        "name": "Fixture Actor Three",
+        "character": "",
+        "order": 2,
+        "profile_path": null
+      },
+      {
+        "id": 1001,
+        "name": "Fixture Actor One",
+        "character": "Night Voice",
+        "order": 3,
+        "profile_path": "/fixture-actor-one.jpg"
+      }
+    ],
+    "crew": [
+      {
+        "id": 2001,
+        "name": "Fixture Producer",
+        "job": "Producer",
+        "profile_path": null
+      },
+      {
+        "id": 2002,
+        "name": "Fixture Director",
+        "job": "Director",
+        "profile_path": "/fixture-director.jpg"
+      }
+    ]
+  },
+  "alternative_titles": {
+    "titles": [
+      { "iso_3166_1": "DE", "title": "Heat (Fixture German Title)" },
+      { "iso_3166_1": "US", "title": "HEAT" },
+      { "iso_3166_1": "XX", "title": "!!!" }
+    ]
+  }
+}
