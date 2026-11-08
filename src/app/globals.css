@@ -191,6 +191,24 @@
   }
 }
 
+/*
+ * Motion moment 2: the reason wipe. `ReasonReveal` sets `data-reveal` only on
+ * items below the fold, and never with reduced motion, so without script or
+ * with reduced motion the bar is simply visible.
+ */
+[data-reveal="hidden"] [data-slot="subtitle-bar"] {
+  clip-path: inset(0 100% 0 0);
+}
+
+[data-reveal="shown"] [data-slot="subtitle-bar"] {
+  clip-path: inset(0 0 0 0);
+  transition: clip-path var(--dur-reveal) var(--ease-out);
+
+  @media (prefers-reduced-motion: reduce) {
+    transition-duration: 0s;
+  }
+}
+
 /* Motion: color changes on hover, focus and press take 120ms. */
 @utility state-change {
   transition-property: color, background-color, border-color;

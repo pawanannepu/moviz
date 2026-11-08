@@ -45,12 +45,13 @@ export function PosterImage({
     return (
       <div
         data-slot="poster-fallback"
+        aria-hidden="true"
         className={cn(
-          "flex aspect-[2/3] w-full items-end rounded-poster bg-card p-4",
+          "flex aspect-2/3 w-full items-start rounded-poster bg-card p-4",
           className,
         )}
       >
-        <span className="type-section break-words">{title}</span>
+        <span className="type-section wrap-break-word">{title}</span>
       </div>
     );
   }
@@ -65,10 +66,7 @@ export function PosterImage({
       unoptimized
       fetchPriority={priority ? "high" : undefined}
       onError={() => setFailed(true)}
-      className={cn(
-        "aspect-[2/3] w-full rounded-poster object-cover",
-        className,
-      )}
+      className={cn("aspect-2/3 w-full rounded-poster object-cover", className)}
     />
   );
 }

@@ -1,4 +1,4 @@
-import { Skeleton } from "@/ui/primitives/skeleton";
+import { MovieCardSkeleton } from "@/ui/movie-card-skeleton";
 
 /**
  * Shown while a list loads: static poster shaped placeholders (nothing pulses)
@@ -12,11 +12,7 @@ export function LoadingState({ label }: { label: string }) {
       </p>
       <div className="feed-grid" aria-hidden="true">
         {[0, 1, 2].map((slot) => (
-          <div key={slot} className="flex flex-col gap-3">
-            <Skeleton className="aspect-[2/3] w-full" />
-            <Skeleton className="h-5 w-3/4" />
-            <Skeleton className="h-4 w-1/2" />
-          </div>
+          <MovieCardSkeleton key={slot} />
         ))}
       </div>
     </div>

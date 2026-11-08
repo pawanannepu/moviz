@@ -4,7 +4,11 @@ import { connection } from "next/server";
 import { ErrorStateDemo } from "@/ui/design/error-state-demo";
 import { isDesignPageHidden } from "@/ui/design/is-design-page-hidden";
 import { ToastDemo } from "@/ui/design/toast-demo";
+import { FeedItem } from "@/ui/feed-item";
 import { Field } from "@/ui/field";
+import { loadHeroPick } from "@/ui/landing/load-hero-pick";
+import { MovieCard, type MovieCardMovie } from "@/ui/movie-card";
+import { MovieCardSkeleton } from "@/ui/movie-card-skeleton";
 import { Button } from "@/ui/primitives/button";
 import { EmptyState } from "@/ui/states/empty-state";
 import { LoadingState } from "@/ui/states/loading-state";
@@ -49,6 +53,59 @@ const COLORS = [
   },
 ] as const;
 
+/** A poster address that never loads, to show the fallback frame. */
+const BROKEN_POSTER = "/moviz-review-missing-poster.jpg";
+
+const LONG_REASON =
+  "Because you rated Heat and Collateral highly, and gave patient, moody crime films with a strong sense of place your top marks every time, this one is the next to see.";
+
+type ReviewMovie = MovieCardMovie;
+
+/**
+ * The movies the review page shows. The first is a real catalog movie when the
+ * database is reachable. The rest are made up to show each case.
+ */
+async function loadReviewMovies(): Promise<ReviewMovie[]> {
+  let real: ReviewMovie | null = null;
+  try {
+    const { db } = await import("@/db/client");
+    const pick = await loadHeroPick(db);
+    if (pick) real = { ...pick.movie, genres: ["Crime", "Thriller"] };
+  } catch {
+    real = null;
+  }
+  return [
+    real ?? {
+      id: 1,
+      title: "Collateral",
+      releaseYear: 2004,
+      posterPath: BROKEN_POSTER,
+      genres: ["Crime", "Thriller"],
+    },
+    {
+      id: 2,
+      title: "Heat",
+      releaseYear: 1995,
+      posterPath: null,
+      genres: ["Crime", "Drama", "Action"],
+    },
+    {
+      id: 3,
+      title: "A film with no year or genres",
+      releaseYear: null,
+      posterPath: null,
+      genres: [],
+    },
+    {
+      id: 4,
+      title: "Broken poster",
+      releaseYear: 2001,
+      posterPath: BROKEN_POSTER,
+      genres: ["Drama"],
+    },
+  ];
+}
+
 function Section({
   id,
   title,
@@ -85,6 +142,27 @@ export default async function DesignPage() {
   await connection();
   const { env } = await import("@/env");
   if (isDesignPageHidden(env.VERCEL_ENV)) notFound();
+
+  const [first, second, third, fourth] = await loadReviewMovies();
+  const cards = [
+    { key: "plain", movie: first, href: undefined },
+    { key: "link", movie: { ...first, id: 5 }, href: "/design" },
+    { key: "no-poster", movie: second, href: undefined },
+    { key: "broken", movie: fourth, href: undefined },
+  ];
+  const feedItems = [
+    { key: "short", movie: first, reason: "Because you rated Heat highly." },
+    {
+      key: "long",
+      movie: { ...third, posterPath: null, title: "Long reason" },
+      reason: LONG_REASON,
+    },
+    {
+      key: "no-poster",
+      movie: second,
+      reason: "Because you liked Collateral.",
+    },
+  ];
 
   return (
     <div className="page-container flex flex-col gap-12 pt-8 pb-16">
@@ -198,6 +276,48 @@ export default async function DesignPage() {
             defaultValue="you@example.com"
           />
         </div>
+      </Section>
+
+      <Section
+        id="movie-card"
+        title="Movie card"
+        note="The poster is the card. Left to right: a plain card, a card that links, a movie with no poster, and a poster that fails to load."
+      >
+        <ul className="feed-grid">
+          {cards.map((card) => (
+            <li key={card.key}>
+              <MovieCard movie={card.movie} href={card.href} />
+            </li>
+          ))}
+        </ul>
+      </Section>
+
+      <Section
+        id="feed-item"
+        title="Feed item"
+        note="A movie card with its reason set as a subtitle on the poster. The reason is never cut off, even at 200 characters. The bar wipes in once as an item scrolls into view."
+      >
+        <ul className="feed-grid">
+          {feedItems.map((item) => (
+            <li key={item.key}>
+              <FeedItem movie={item.movie} reason={item.reason} />
+            </li>
+          ))}
+        </ul>
+      </Section>
+
+      <Section
+        id="skeleton"
+        title="Skeleton"
+        note="Static placeholders. Nothing pulses."
+      >
+        <ul className="feed-grid">
+          {[0, 1].map((slot) => (
+            <li key={slot}>
+              <MovieCardSkeleton />
+            </li>
+          ))}
+        </ul>
       </Section>
 
       <Section id="states" title="States" note="Empty, error and loading.">

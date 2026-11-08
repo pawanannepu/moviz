@@ -37,8 +37,8 @@ export function Hero({ pick }: { pick: HeroPick | null }) {
         </div>
       </div>
 
-      <figure className="w-full max-w-[420px]">
-        <div className="relative aspect-[2/3] overflow-hidden rounded-poster bg-card">
+      <figure className="w-full max-w-105">
+        <div className="relative aspect-2/3 overflow-hidden rounded-poster bg-card">
           {pick ? (
             <PosterImage
               src={posterUrl(pick.movie.posterPath, "w500")}
