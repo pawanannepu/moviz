@@ -1,7 +1,7 @@
 # 0002. Data model: narrow Postgres tables, designed whole, migrated per slice
 
 **Date**: 2026-11-08
-**Status**: In Progress
+**Status**: Accepted
 
 ## Summary
 

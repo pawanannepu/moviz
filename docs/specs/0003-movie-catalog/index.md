@@ -1,7 +1,7 @@
 # 0003. Movie catalog: about 3,000 movies from TMDB, loaded by script and kept fresh by a daily job
 
 **Date**: 2026-11-08
-**Status**: Proposed
+**Status**: In Progress
 
 ## Summary
 
@@ -253,13 +253,13 @@ Build approach: Tracer Bullet (from `AGENTS.md`). The thin thread first runs one
 
 Built by `/develop movie catalog`:
 
-1. Foundation: add `TMDB_API_TOKEN`, `VOYAGE_API_KEY`, and `CRON_SECRET` as optional names in `src/env.ts` and `.env.example`; add `tagline`, `vote_count`, `source_missing_at` to `movies` and `tmdb_id` (unique) to `people` in `src/db/schema/catalog.ts`; generate the Drizzle migration; add `isListable`. Satisfies **AC-7**, **AC-17**
-2. Thin thread for one movie: the TMDB client with Zod schemas, retry, timeouts, and the 401/403 abort, pure `isEligible` and `mapDetails`, `persistMovie` (the write path: advisory lock, one transaction, genre and people upserts, credit dedupe, child row replacement, `updated_at`), `getMovie` and `getMoviesByIds` with their return types, `posterUrl` with `POSTER_DIMENSIONS`, and `RunSummary`, with TMDB fixtures. Prove it by syncing one fixture movie into the dev branch and reading it back. Satisfies **AC-3**, **AC-6**, **AC-13**, **AC-15**, **AC-16**, **AC-18**, **AC-19**
-3. Full seed: genre upsert, discover paging, the target check before detail calls, bounded concurrency, resume and idempotency, restoring removed movies, `--target` and `--id`, orphan people cleanup, the run summary with the shortfall and duplicate title report, and `pnpm catalog:seed` with its own env schema. Run it once for real against your dev branch. Satisfies **AC-1**, **AC-2**, **AC-3**, **AC-15**, **AC-19**
-4. Matcher: `matchMovies` with dedupe, the single query, the kind tiebreak, and the pure chooser. Satisfies **AC-4**, **AC-5**
-5. Embeddings: `buildEmbeddingText`, `model.ts`, the Voyage client (Zod parsed, 20 second timeout, retry), `embedMovies` (guarded insert per batch, delete on null poster), and `pnpm embed:catalog`. Check the current Voyage model name and its 1024 dimension output first. Satisfies **AC-8**, **AC-9**, **AC-15**, **AC-16**, **AC-19**
-6. Cron: `refresh` (nulls first, includes unlisted movies), `addNewHits`, removal handling (404 and adult), the time budget, the route with bearer auth and `config_missing`, orphan people cleanup, and the `vercel.json` entry. Satisfies **AC-10**, **AC-11**, **AC-12**, **AC-19**
-7. Attribution footer: save the TMDB logo as `public/tmdb-logo.svg`, build `TmdbAttribution` with the alt text and the Moviz name, and add it to the root layout. Satisfies **AC-14**
+1. [ ] Foundation: add `TMDB_API_TOKEN`, `VOYAGE_API_KEY`, and `CRON_SECRET` as optional names in `src/env.ts` and `.env.example`; add `tagline`, `vote_count`, `source_missing_at` to `movies` and `tmdb_id` (unique) to `people` in `src/db/schema/catalog.ts`; generate the Drizzle migration; add `isListable`. Satisfies **AC-7**, **AC-17**
+2. [x] Thin thread for one movie: the TMDB client with Zod schemas, retry, timeouts, and the 401/403 abort, pure `isEligible` and `mapDetails`, `persistMovie` (the write path: advisory lock, one transaction, genre and people upserts, credit dedupe, child row replacement, `updated_at`), `getMovie` and `getMoviesByIds` with their return types, `posterUrl` with `POSTER_DIMENSIONS`, and `RunSummary`, with TMDB fixtures. Prove it by syncing one fixture movie into the dev branch and reading it back. Satisfies **AC-3**, **AC-6**, **AC-13**, **AC-15**, **AC-16**, **AC-18**, **AC-19**
+3. [ ] Full seed: genre upsert, discover paging, the target check before detail calls, bounded concurrency, resume and idempotency, restoring removed movies, `--target` and `--id`, orphan people cleanup, the run summary with the shortfall and duplicate title report, and `pnpm catalog:seed` with its own env schema. Run it once for real against your dev branch. Satisfies **AC-1**, **AC-2**, **AC-3**, **AC-15**, **AC-19**
+4. [x] Matcher: `matchMovies` with dedupe, the single query, the kind tiebreak, and the pure chooser. Satisfies **AC-4**, **AC-5**
+5. [x] Embeddings: `buildEmbeddingText`, `model.ts`, the Voyage client (Zod parsed, 20 second timeout, retry), `embedMovies` (guarded insert per batch, delete on null poster), and `pnpm embed:catalog`. Check the current Voyage model name and its 1024 dimension output first. Satisfies **AC-8**, **AC-9**, **AC-15**, **AC-16**, **AC-19**
+6. [x] Cron: `refresh` (nulls first, includes unlisted movies), `addNewHits`, removal handling (404 and adult), the time budget, the route with bearer auth and `config_missing`, orphan people cleanup, and the `vercel.json` entry. Satisfies **AC-10**, **AC-11**, **AC-12**, **AC-19**
+7. [x] Attribution footer: save the TMDB logo as `public/tmdb-logo.svg`, build `TmdbAttribution` with the alt text and the Moviz name, and add it to the root layout. Satisfies **AC-14**
 
 Traceability: AC-16 is enforced across tasks 2, 3, 5, and 6 (no token in logs) and checked by one test. AC-7 and AC-17 are satisfied by task 1; AC-18 by task 2.
 

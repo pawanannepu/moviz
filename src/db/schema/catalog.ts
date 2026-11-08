@@ -14,6 +14,7 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
   vector,
 } from "drizzle-orm/pg-core";
 
@@ -53,12 +54,17 @@ export const movies = pgTable(
       sql`extract(year from release_date)::smallint`,
     ),
     overview: text("overview"),
+    tagline: text("tagline"),
     runtimeMinutes: integer("runtime_minutes"),
     posterPath: text("poster_path"),
     originalLanguage: text("original_language"),
     popularity: real("popularity"),
     voteAverage: real("vote_average"),
+    voteCount: integer("vote_count"),
     fetchedAt: timestamptz("fetched_at"),
+    // Set when TMDB no longer returns the movie. The row stays so user ratings
+    // and lists still work (spec 0003). Null means the movie is live.
+    sourceMissingAt: timestamptz("source_missing_at"),
     // Title matches (weight A) rank above overview matches (weight B).
     search: tsvector("search").generatedAlwaysAs(
       sql`setweight(to_tsvector('english', coalesce(title, '')), 'A') || setweight(to_tsvector('english', coalesce(overview, '')), 'B')`,
@@ -131,11 +137,19 @@ export const movieGenres = pgTable(
   ],
 );
 
-export const people = pgTable("people", {
-  id: bigint("id", { mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
-  name: text("name").notNull(),
-  profilePath: text("profile_path"),
-});
+export const people = pgTable(
+  "people",
+  {
+    id: bigint("id", { mode: "number" })
+      .primaryKey()
+      .generatedAlwaysAsIdentity(),
+    // The TMDB person id, so one person row is reused across movies.
+    tmdbId: integer("tmdb_id"),
+    name: text("name").notNull(),
+    profilePath: text("profile_path"),
+  },
+  (t) => [uniqueIndex("people_tmdb_id_idx").on(t.tmdbId)],
+);
 
 export const credits = pgTable(
   "credits",

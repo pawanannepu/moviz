@@ -15,7 +15,7 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 |---|---------|-------|--------|
 | 1 | Stack & architecture | Foundation | done |
 | 2 | Coding standards & tooling | Foundation | done |
-| 3 | Data model | Foundation | in-progress |
+| 3 | Data model | Foundation | done |
 | 4 | Movie catalog | Foundation | in-progress |
 | 5 | Design system & UI foundation | Foundation | planned |
 | 6 | Email sign in | Slice 1 | planned |
@@ -65,16 +65,16 @@ spec [0002](../specs/0002-data-model/index.md) · code in `src/db/`, `src/rating
 ### 4. Movie catalog
 Where movie facts come from (titles, year, genres, cast, posters, synopsis) and how they are stored, refreshed, and matched, because swipe, feed, import, and search all depend on it.
 **Done when:** a few thousand real movies with posters and metadata are queryable, and a title plus year can be matched to one catalog movie reliably.
-spec [0003](../specs/0003-movie-catalog/index.md)
+spec [0003](../specs/0003-movie-catalog/index.md) · code in `src/catalog/`, `drizzle/`
 - [x] Design it (spec): `/architect movie catalog`
-- [ ] Build it: `/develop movie catalog`
-  - [ ] Foundation and one movie end to end: env names, migration, TMDB client, write path, read functions (AC-3, AC-6, AC-7, AC-13, AC-15, AC-16, AC-17, AC-18, AC-19)
-  - [ ] Full seed script: `pnpm catalog:seed` for 3,000 movies (AC-1, AC-2)
-  - [ ] Title plus year matcher (AC-4, AC-5)
-  - [ ] Embeddings script (AC-8, AC-9)
-  - [ ] Daily cron and TMDB footer notice (AC-10, AC-11, AC-12, AC-14)
-- [ ] Verify it: `/check verify movie catalog`
-- [ ] Test it: `/test movie catalog`
+- [x] Build it: `/develop movie catalog`
+  - [x] Foundation and one movie end to end: env names, migration, TMDB client, write path, read functions (AC-3, AC-6, AC-7, AC-13, AC-15, AC-16, AC-17, AC-18, AC-19)
+  - [x] Full seed script: `pnpm catalog:seed` for 3,000 movies (AC-1, AC-2)
+  - [x] Title plus year matcher (AC-4, AC-5)
+  - [x] Embeddings script (AC-8, AC-9)
+  - [x] Daily cron and TMDB footer notice (AC-10, AC-11, AC-12, AC-14)
+- [x] Verify it: `/check verify movie catalog`
+- [x] Test it: `/test movie catalog`
 
 ### 5. Design system & UI foundation · needs a decision
 Visual language, layout, and base components, including the swipe card and movie card, so every screen feels cohesive and works on phones.

@@ -31,6 +31,10 @@ pnpm format      # Biome format, writes changes
 pnpm test        # Vitest unit and integration (src/**/*.test.ts), exits 0 while no tests exist
 pnpm test:watch  # Vitest in watch mode
 pnpm test:e2e    # Playwright end to end and axe accessibility scans (e2e/*.spec.ts)
+pnpm db:generate # drizzle-kit: write a migration from the schema change
+pnpm db:migrate  # apply migrations to the database in .env.local (check which branch first)
+pnpm catalog:seed    # load the TMDB catalog, resumable (--target <n>, --id <tmdbId>); needs TMDB_API_TOKEN
+pnpm embed:catalog   # write Voyage embeddings for listable movies; needs VOYAGE_API_KEY
 ```
 
 ## Specs
@@ -92,3 +96,13 @@ MCP servers: Neon (recommended, connect it yourself, use read only mode on produ
 <!-- Nested AGENTS.md files are listed here as they are created -->
 
 _Drafted by /audit from the repo, worth a quick human pass. Edit freely: once a line stops matching this draft, later runs treat it as curated and will flag rather than overwrite it._
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
