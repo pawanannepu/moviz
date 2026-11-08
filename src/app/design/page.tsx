@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { ErrorStateDemo } from "@/ui/design/error-state-demo";
 import { isDesignPageHidden } from "@/ui/design/is-design-page-hidden";
+import { SwipeDemo } from "@/ui/design/swipe-demo";
 import { ToastDemo } from "@/ui/design/toast-demo";
 import { FeedItem } from "@/ui/feed-item";
 import { Field } from "@/ui/field";
@@ -318,6 +319,14 @@ export default async function DesignPage() {
             </li>
           ))}
         </ul>
+      </Section>
+
+      <Section
+        id="swipe-card"
+        title="Swipe card"
+        note="Drag the poster right to like, left to dislike, up for not seen. Or press a button. Or focus the card and use the arrow keys. A pretend save takes about half a second."
+      >
+        <SwipeDemo movies={[first, second, third, fourth]} />
       </Section>
 
       <Section id="states" title="States" note="Empty, error and loading.">

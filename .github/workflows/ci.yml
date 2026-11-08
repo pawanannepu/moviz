@@ -25,6 +25,10 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
       - name: Build
+        # next build loads route modules; env.ts requires DATABASE_URL.
+        # A placeholder is enough — CI does not talk to a real database here.
+        env:
+          DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ci
         run: pnpm build
       - name: Unit tests
         run: pnpm test

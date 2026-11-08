@@ -209,6 +209,92 @@
   }
 }
 
+/*
+ * The swipe card column. As wide as a poster that is at most 60% of the
+ * viewport height and 560px tall, but never narrower than 280px (so the three
+ * buttons fit) and never wider than the screen.
+ */
+@utility swipe-column {
+  width: min(100%, max(280px, calc(min(60dvh, 560px) * 2 / 3)));
+  margin-inline: auto;
+}
+
+/* The draggable poster. `touch-action: none` is on the poster only, so a finger on
+   the buttons or text still scrolls the page. */
+@utility swipe-poster {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+
+  & img {
+    -webkit-user-drag: none;
+    user-select: none;
+  }
+}
+
+/* The only shadow: a faint yellow glow while the card is dragged. */
+@utility glow-drag {
+  box-shadow: var(--glow-drag);
+}
+
+/*
+ * Motion moment 1, swipe response. While dragging, the poster follows the
+ * pointer (inline style). Once released it returns, or leaves in the direction
+ * of the choice. With reduced motion the poster still follows the pointer, but
+ * the exit and the return are instant.
+ */
+[data-slot="swipe-poster"] {
+  transition:
+    transform var(--dur-card) var(--ease-out),
+    opacity var(--dur-card) var(--ease-out);
+}
+
+[data-slot="swipe-poster"][data-phase="dragging"] {
+  transition: none;
+}
+
+[data-slot="swipe-poster"][data-exit="right"] {
+  transform: translateX(130%) rotate(8deg);
+  opacity: 0;
+}
+
+[data-slot="swipe-poster"][data-exit="left"] {
+  transform: translateX(-130%) rotate(-8deg);
+  opacity: 0;
+}
+
+[data-slot="swipe-poster"][data-exit="up"] {
+  transform: translateY(-130%);
+  opacity: 0;
+}
+
+/* Motion moment 3, deck advance: the next card scales in and fades in. */
+@keyframes deck-advance {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+[data-slot="swipe-card"][data-enter="advance"] {
+  animation: deck-advance var(--dur-card) var(--ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-slot="swipe-poster"] {
+    transition: none;
+  }
+
+  [data-slot="swipe-card"][data-enter="advance"] {
+    animation: none;
+  }
+}
+
 /* Motion: color changes on hover, focus and press take 120ms. */
 @utility state-change {
   transition-property: color, background-color, border-color;
