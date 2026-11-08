@@ -1,0 +1,164 @@
+import { desc, eq } from "drizzle-orm";
+import type { Db } from "@/db/create-db";
+import {
+  type DbUnavailable,
+  toDbFailure,
+  type UserNotFound,
+} from "@/db/failure";
+import { movies, profiles, ratings, swipeSkips, user } from "@/db/schema";
+import { err, ok, type Result } from "@/lib/result";
+
+/**
+ * The download a user gets (spec 0002, `UserExport`). Every time is an ISO 8601
+ * UTC string. It never holds password hashes, session tokens, or `verification`
+ * rows. Each later feature that adds a user table adds its key here (`watchlist`,
+ * `feedback`, `imports`, `searchUsage`) without changing the keys below, and wires
+ * the table into `deleteAccount` and the completeness test in the same change.
+ */
+export type UserExport = {
+  schemaVersion: 1;
+  exportedAt: string;
+  account: {
+    id: string;
+    email: string;
+    name: string;
+    emailVerified: boolean;
+    createdAt: string;
+  };
+  profile: {
+    country: string | null;
+    countrySource: "ip" | "user" | null;
+    onboardedAt: string | null;
+    termsAcceptedAt: string | null;
+    termsVersion: string | null;
+    createdAt: string;
+    updatedAt: string;
+  } | null;
+  ratings: {
+    movieId: number;
+    title: string;
+    year: number | null;
+    /** Half stars, 0.5 to 5 (the stored score divided by 2). */
+    stars: number;
+    source: "swipe" | "import" | "manual";
+    ratedAt: string;
+    updatedAt: string;
+  }[];
+  skips: {
+    movieId: number;
+    title: string;
+    year: number | null;
+    skippedAt: string;
+  }[];
+};
+
+export type ExportUserDataError = UserNotFound | DbUnavailable;
+
+const iso = (date: Date) => date.toISOString();
+
+/**
+ * Builds the user's whole export. All reads run in one repeatable read, read only
+ * transaction, so the document is a consistent snapshot even if the user rates a
+ * movie mid export. Contains only rows for `userId`.
+ */
+export async function exportUserData(
+  db: Db,
+  input: { userId: string },
+): Promise<Result<UserExport, ExportUserDataError>> {
+  const { userId } = input;
+  try {
+    const result = await db.transaction(
+      async (tx) => {
+        const [account] = await tx
+          .select({
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            emailVerified: user.emailVerified,
+            createdAt: user.createdAt,
+          })
+          .from(user)
+          .where(eq(user.id, userId));
+        if (!account) return null;
+
+        const [profile] = await tx
+          .select()
+          .from(profiles)
+          .where(eq(profiles.userId, userId));
+
+        const ratingRows = await tx
+          .select({
+            movieId: ratings.movieId,
+            title: movies.title,
+            year: movies.releaseYear,
+            score: ratings.score,
+            source: ratings.source,
+            ratedAt: ratings.ratedAt,
+            updatedAt: ratings.updatedAt,
+          })
+          .from(ratings)
+          .innerJoin(movies, eq(movies.id, ratings.movieId))
+          .where(eq(ratings.userId, userId))
+          .orderBy(desc(ratings.updatedAt), desc(ratings.movieId));
+
+        const skipRows = await tx
+          .select({
+            movieId: swipeSkips.movieId,
+            title: movies.title,
+            year: movies.releaseYear,
+            skippedAt: swipeSkips.skippedAt,
+          })
+          .from(swipeSkips)
+          .innerJoin(movies, eq(movies.id, swipeSkips.movieId))
+          .where(eq(swipeSkips.userId, userId))
+          .orderBy(desc(swipeSkips.skippedAt), desc(swipeSkips.movieId));
+
+        const document: UserExport = {
+          schemaVersion: 1,
+          exportedAt: iso(new Date()),
+          account: {
+            id: account.id,
+            email: account.email,
+            name: account.name,
+            emailVerified: account.emailVerified,
+            createdAt: iso(account.createdAt),
+          },
+          profile: profile
+            ? {
+                country: profile.country,
+                countrySource: profile.countrySource,
+                onboardedAt: profile.onboardedAt && iso(profile.onboardedAt),
+                termsAcceptedAt:
+                  profile.termsAcceptedAt && iso(profile.termsAcceptedAt),
+                termsVersion: profile.termsVersion,
+                createdAt: iso(profile.createdAt),
+                updatedAt: iso(profile.updatedAt),
+              }
+            : null,
+          ratings: ratingRows.map((row) => ({
+            movieId: row.movieId,
+            title: row.title,
+            year: row.year,
+            stars: row.score / 2,
+            source: row.source,
+            ratedAt: iso(row.ratedAt),
+            updatedAt: iso(row.updatedAt),
+          })),
+          skips: skipRows.map((row) => ({
+            movieId: row.movieId,
+            title: row.title,
+            year: row.year,
+            skippedAt: iso(row.skippedAt),
+          })),
+        };
+        return document;
+      },
+      { isolationLevel: "repeatable read", accessMode: "read only" },
+    );
+    return result ? ok(result) : err({ code: "user_not_found" });
+  } catch (error) {
+    const failure = toDbFailure(error);
+    if (failure?.code === "db_unavailable") return err(failure);
+    throw error;
+  }
+}

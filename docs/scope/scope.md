@@ -15,7 +15,7 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 |---|---------|-------|--------|
 | 1 | Stack & architecture | Foundation | done |
 | 2 | Coding standards & tooling | Foundation | done |
-| 3 | Data model | Foundation | planned |
+| 3 | Data model | Foundation | in-progress |
 | 4 | Movie catalog | Foundation | planned |
 | 5 | Design system & UI foundation | Foundation | planned |
 | 6 | Email sign in | Slice 1 | planned |
@@ -49,10 +49,18 @@ code in `biome.json`, `.husky/`, `.github/workflows/ci.yml`
 - [x] Install the tooling: `/develop tooling`
 - [x] Check it runs clean: `/test`
 
-### 3. Data model · needs a decision
+### 3. Data model
 The core records every slice builds on: users, movies, ratings, taste signals, watchlist and seen entries, feed feedback, and import records.
 **Done when:** entities and relationships support all planned slices (import, watchlist, feedback, search) without a breaking migration, and a user's data can be exported and deleted.
-- [ ] Design it (spec): `/architect data model`
+spec [0002](../specs/0002-data-model/index.md) · code in `src/db/`, `src/ratings/`, `src/profile/`, `src/user-data/`, `drizzle/`
+- [x] Design it (spec): `/architect data model`
+- [x] Build it: `/develop data model`
+  - [x] Database foundation and auth schema (AC-13, AC-15)
+  - [x] Migration 1: schema, indexes, checks, and helpers (AC-1, AC-2, AC-7, AC-8, AC-9, AC-15)
+  - [x] Slice 1 functions: ratings, swipes, profile, exclusions, cursors (AC-2, AC-4, AC-5, AC-14, AC-16, AC-17)
+  - [x] Export and delete with the completeness test (AC-12, AC-13, AC-14)
+- [x] Verify it: `/check verify data model`
+- [x] Test it: `/test data model`
 
 ### 4. Movie catalog · needs a decision
 Where movie facts come from (titles, year, genres, cast, posters, synopsis) and how they are stored, refreshed, and matched, because swipe, feed, import, and search all depend on it.
