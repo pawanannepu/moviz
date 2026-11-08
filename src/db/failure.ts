@@ -6,19 +6,16 @@ export type DbFailure = MovieNotFound | UserNotFound | DbUnavailable;
 
 type PgErrorLike = { code?: unknown; constraint?: unknown; message?: unknown };
 
-/** Drizzle wraps driver errors in `.cause`; walk down to the one from `pg`. */
-function findPgError(error: unknown): PgErrorLike | null {
+/** Drizzle wraps driver errors in `.cause`; this lists the error and its causes, outermost first. */
+function errorChain(error: unknown): PgErrorLike[] {
+  const chain: PgErrorLike[] = [];
   let current: unknown = error;
   for (let depth = 0; depth < 5 && current; depth++) {
-    if (typeof current === "object" && "code" in current) {
-      return current as PgErrorLike;
-    }
-    current =
-      typeof current === "object" && "cause" in current
-        ? (current as { cause?: unknown }).cause
-        : null;
+    if (typeof current !== "object") break;
+    chain.push(current as PgErrorLike);
+    current = (current as { cause?: unknown }).cause;
   }
-  return null;
+  return chain;
 }
 
 const FOREIGN_KEY_VIOLATION = "23503";
@@ -52,8 +49,20 @@ const UNAVAILABLE_MESSAGES = [
  * table>_<ref column>_fk`. Never reads or logs row values.
  */
 export function toDbFailure(error: unknown): DbFailure | null {
-  const pg = findPgError(error);
-  if (!pg) return null;
+  const chain = errorChain(error);
+  // The driver error is the first one in the chain that carries a `code`.
+  const pg = chain.find((link) => "code" in link) ?? null;
+  // `pg` throws some connection errors as plain Errors with a message and no
+  // `code` ("Connection terminated unexpectedly", pool connect timeouts), so the
+  // message check looks at every error in the chain.
+  const messageSaysUnavailable = chain.some(
+    (link) =>
+      typeof link.message === "string" &&
+      UNAVAILABLE_MESSAGES.some((text) =>
+        (link.message as string).includes(text),
+      ),
+  );
+  if (!pg) return messageSaysUnavailable ? { code: "db_unavailable" } : null;
   const code = typeof pg.code === "string" ? pg.code : "";
   if (code === FOREIGN_KEY_VIOLATION) {
     const constraint = typeof pg.constraint === "string" ? pg.constraint : "";
@@ -68,9 +77,5 @@ export function toDbFailure(error: unknown): DbFailure | null {
   if (code.startsWith("08") || UNAVAILABLE_CODES.has(code)) {
     return { code: "db_unavailable" };
   }
-  const message = typeof pg.message === "string" ? pg.message : "";
-  if (UNAVAILABLE_MESSAGES.some((text) => message.includes(text))) {
-    return { code: "db_unavailable" };
-  }
-  return null;
+  return messageSaysUnavailable ? { code: "db_unavailable" } : null;
 }

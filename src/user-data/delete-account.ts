@@ -14,9 +14,10 @@ export type DeleteAccountError = UserNotFound | DbUnavailable;
  * Deletes the `verification` rows that belong to a user. They are keyed by
  * `identifier`, not by user id, so the cascade from `user` never reaches them.
  * Better Auth stores the user id in `value` for password reset and delete account
- * rows, and plugins may embed the email in `identifier`. The email match is
- * case insensitive and uses `position`, not `like`, so `%` and `_` in an address
- * are plain characters.
+ * rows, and plugins may embed the email in `identifier`. The identifier must be
+ * the email, or end with `-<email>` or `:<email>` (for example `sign-in-otp-<email>`),
+ * so `a@x.test` never matches the row of `aa@x.test`. The match is case
+ * insensitive and uses no `like`, so `%` and `_` in an address are plain characters.
  */
 export async function deleteVerificationRows(
   executor: Executor,
@@ -28,7 +29,8 @@ export async function deleteVerificationRows(
     .where(
       or(
         eq(verification.value, input.userId),
-        sql`position(${email}::text in lower(${verification.identifier})) > 0`,
+        sql`lower(${verification.identifier}) = ${email}::text`,
+        sql`right(lower(${verification.identifier}), length(${email}::text) + 1) in ('-' || ${email}::text, ':' || ${email}::text)`,
       ),
     );
 }
