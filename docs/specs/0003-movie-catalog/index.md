@@ -1,7 +1,7 @@
 # 0003. Movie catalog: about 3,000 movies from TMDB, loaded by script and kept fresh by a daily job
 
 **Date**: 2026-11-08
-**Status**: In Progress
+**Status**: Accepted
 
 ## Summary
 

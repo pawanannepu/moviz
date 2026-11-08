@@ -11,7 +11,7 @@ Source of truth: [docs/specs/0001-stack-architecture/index.md](docs/specs/0001-s
 - **Data**: Postgres on Neon with pgvector, Drizzle ORM over a `pg` Pool, Zod at every boundary
 - **Services**: Better Auth (email sign in), Resend (email), Voyage AI (embeddings), Vercel (hosting and cron)
 - **Package manager**: pnpm 10 (pinned in `packageManager`)
-- Only the Next.js scaffold exists today. The rest arrives with the feature that needs it.
+- Built so far: the Next.js scaffold, the data layer (`src/db`, `src/auth`, `src/profile`, `src/ratings`, `src/user-data`) and the movie catalog (`src/catalog`, with a daily cron at `/api/cron/catalog`). Email and the product UI arrive with the feature that needs them.
 
 ## Build approach
 
@@ -28,7 +28,7 @@ pnpm check       # Biome lint, format, and import order check (what CI runs)
 pnpm check:fix   # same, but writes fixes
 pnpm lint        # Biome lint only
 pnpm format      # Biome format, writes changes
-pnpm test        # Vitest unit and integration (src/**/*.test.ts), exits 0 while no tests exist
+pnpm test        # Vitest unit and integration (src/**/*.test.ts); database tests need DATABASE_URL_TEST and skip without it
 pnpm test:watch  # Vitest in watch mode
 pnpm test:e2e    # Playwright end to end and axe accessibility scans (e2e/*.spec.ts)
 pnpm db:generate # drizzle-kit: write a migration from the schema change
@@ -56,7 +56,7 @@ Stored in `docs/specs/`. Format: `docs/specs/NNNN-title/index.md`.
 
 ## Tooling
 
-Chosen here, installed by `/develop tooling`. Installed: Biome (`biome.json`), the Husky pre commit hook (`.husky/pre-commit`, runs lint-staged then typecheck), CI (`.github/workflows/ci.yml`, runs `pnpm test` but not Playwright yet), Vitest (`vitest.config.ts`), and Playwright (`playwright.config.ts`, Chromium only). Runner choices are saved in `test-preferences.json`. No tests exist yet.
+Chosen here, installed by `/develop tooling`. Installed: Biome (`biome.json`), the Husky pre commit hook (`.husky/pre-commit`, runs lint-staged then typecheck), CI (`.github/workflows/ci.yml`, runs `pnpm test` but not Playwright yet), Vitest (`vitest.config.ts`), and Playwright (`playwright.config.ts`, Chromium only). Runner choices are saved in `test-preferences.json`. Vitest suites cover the data model and the catalog, and one Playwright spec (`e2e/tmdb-footer.spec.ts`) covers the TMDB footer. Shared test helpers live in `src/test-support/`.
 
 - Lint and format: Biome (one tool, one config file).
 - Before each commit: lint, format, and typecheck.
@@ -93,7 +93,7 @@ MCP servers: Neon (recommended, connect it yourself, use read only mode on produ
 
 ## Context files
 
-<!-- Nested AGENTS.md files are listed here as they are created -->
+- [src/catalog/AGENTS.md](src/catalog/AGENTS.md): TMDB sync, cron job, embeddings, title matching and the listable rule for the movie catalog
 
 _Drafted by /audit from the repo, worth a quick human pass. Edit freely: once a line stops matching this draft, later runs treat it as curated and will flag rather than overwrite it._
 
