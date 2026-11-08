@@ -59,8 +59,8 @@ spec [0002](../specs/0002-data-model/index.md) · code in `src/db/`, `src/rating
   - [x] Migration 1: schema, indexes, checks, and helpers (AC-1, AC-2, AC-7, AC-8, AC-9, AC-15)
   - [x] Slice 1 functions: ratings, swipes, profile, exclusions, cursors (AC-2, AC-4, AC-5, AC-14, AC-16, AC-17)
   - [x] Export and delete with the completeness test (AC-12, AC-13, AC-14)
-- [ ] Verify it: `/check verify data model`
-- [ ] Test it: `/test data model`
+- [x] Verify it: `/check verify data model`
+- [x] Test it: `/test data model`
 
 ### 4. Movie catalog · needs a decision
 Where movie facts come from (titles, year, genres, cast, posters, synopsis) and how they are stored, refreshed, and matched, because swipe, feed, import, and search all depend on it.
