@@ -87,7 +87,7 @@ Conventions: every timestamp is `timestamptz` in UTC with `default now()`. App t
 
 | Feature | Tables used | Migration lands with |
 |---|---|---|
-| 4 Movie catalog | `movies`, `movie_titles`, `movie_external_ids`, `genres`, `movie_genres`, `people`, `credits`, `movie_embeddings` | Migration 1 (this feature's build) |
+| 4 Movie catalog | `movies`, `movie_titles`, `movie_external_ids`, `genres`, `movie_genres`, `people`, `credits`, `movie_embeddings` | Migration 1 (this feature's build). Spec 0003 adds four nullable columns in its own migration: `movies.tagline`, `movies.vote_count`, `movies.source_missing_at`, and `people.tmdb_id` (unique). |
 | 6 Email sign in | auth tables, `profiles` | Migration 1 |
 | 7 Swipe onboarding | `ratings`, `swipe_skips`, `profiles.onboarded_at` | Migration 1 |
 | 8 Recommender, 9 Feed | read `ratings`, `movie_embeddings`, genres, credits; compute reasons on read | Migration 1 (no new tables) |
@@ -180,7 +180,7 @@ Shared error handling: every function returns `Result`. Database connection fail
 - `movie_embeddings.dimensions` equals 1024 and the vector has 1024 entries. A different size means a new table through a migration.
 - `imports.rows_matched + imports.rows_unmatched = imports.rows_total` for `completed` rows (database check).
 - `search_usage.count` never exceeds 30 per UTC day. The cap is enforced in the upsert's `WHERE`, not by a check constraint, so changing it is a code change.
-- Movies referenced by user rows cannot be deleted (`ON DELETE RESTRICT`). Catalog sync marks nothing deleted; the app never deletes a movie.
+- Movies referenced by user rows cannot be deleted (`ON DELETE RESTRICT`). The app never deletes a movie row. When TMDB withdraws a movie, catalog sync (spec 0003) keeps the row, sets `movies.source_missing_at`, and clears its TMDB content, so user ratings and lists keep working.
 - Pure helpers (`normalizeTitle`, `swipeScore`) have no side effects. Database and clock access stay in the functions above.
 
 **Security model**
@@ -271,7 +271,7 @@ Traceability: AC-1 is satisfied by the design itself (the slice coverage table) 
 
 ## Follow-up
 
-- [ ] Spec 4 (movie catalog): add provider specific columns and person external ids additively; load `movie_titles` and `movie_external_ids`; use `normalizeTitle` for every key; write embeddings with model name and dimension; keep `fetched_at` honest for the TMDB six month caching limit.
+- [x] Spec 4 (movie catalog): add provider specific columns and person external ids additively; load `movie_titles` and `movie_external_ids`; use `normalizeTitle` for every key; write embeddings with model name and dimension; keep `fetched_at` honest for the TMDB six month caching limit. Decided in spec [0003](../0003-movie-catalog/index.md); built with feature 4.
 - [ ] Verify before building: pgvector is enabled on the Neon project; Drizzle's syntax for an HNSW index, a vector column, and a generated tsvector column (likely a custom type) matches the installed version; Vercel's response body limit for streamed responses.
 - [ ] Voyage facts to re check at build: the current model name, that it offers a 1024 dimension output, and the free allowance. Voyage's own pages disagree on which models get free tokens.
 - [ ] Spec 16 (where to watch): design the streaming availability table; it will point at `movies` and be additive.
@@ -280,7 +280,7 @@ Traceability: AC-1 is satisfied by the design itself (the slice coverage table) 
 - [ ] Spec 15 (bite search): wire the purge of old `search_usage` rows into the daily cron. Also purge expired `rate_limit` rows there, because Better Auth does not.
 - [ ] Verify against the installed Better Auth version before building: how password reset and plugin rows are stored in `verification` (the cleanup rule in *Value sourcing* comes from a cross check, not from reading the library), and that `deleteUser` with a `beforeDelete` hook works as described.
 - [ ] Spec 17 (privacy): decide whether deleting an account requires a fresh sign in (recommended: yes); state the Neon point in time restore window; forbid branching production data into dev or preview branches.
-- [ ] Spec 4 (movie catalog): own a merge procedure for duplicate movies that re points user rows (user to movie keys are `RESTRICT`); fill `movie_titles` with a `primary` row for every movie.
+- [ ] Duplicate movie merge procedure that re points user rows (user to movie keys are `RESTRICT`): deferred. Spec [0003](../0003-movie-catalog/index.md) only reports movies that share a title key and year and makes the matcher return `ambiguous`; it fills `movie_titles` with a `primary` row for every movie. Design a merge only if real duplicates show up.
 - [ ] Spec 8 (recommender): provide `reasonsFor(userId, movieId)` for the detail page.
 - [ ] Rule for every later slice that adds a user table: extend `exportUserData`, `deleteAccount`, and the completeness test in the same change.
 - [x] Scope row 3 links this spec and lists the milestones from the Build plan.
