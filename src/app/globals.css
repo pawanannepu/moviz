@@ -177,6 +177,20 @@
   }
 }
 
+/*
+ * The feed grid: as many 260px or wider columns as fit, 32px between rows and
+ * 24px between columns. On one column an item is at most 420px wide.
+ */
+@utility feed-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: 32px 24px;
+
+  & > * {
+    max-width: 420px;
+  }
+}
+
 /* Motion: color changes on hover, focus and press take 120ms. */
 @utility state-change {
   transition-property: color, background-color, border-color;

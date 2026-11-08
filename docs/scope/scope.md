@@ -84,7 +84,7 @@ code in [src/ui/](../../src/ui/)
 - [x] Design it (spec): `/architect design system & UI foundation`
 - [ ] Build it: `/develop design system & UI foundation`
   - [x] Thread: tokens, fonts, layout pieces, and the real landing page (AC-1, AC-4, AC-5, AC-7, AC-15)
-  - [ ] Contrast guard, primitives, states, and the `/design` page (AC-3, AC-6, AC-14, AC-17)
+  - [x] Contrast guard, primitives, states, and the `/design` page (AC-3, AC-6, AC-14, AC-17)
   - [ ] Movie card and feed item with the reason bar (AC-8, AC-9, AC-13, AC-19)
   - [ ] Swipe card: buttons, drag, keyboard (AC-10, AC-11, AC-12, AC-13, AC-19)
   - [ ] Browser tests, gates, and `design.md` (AC-2, AC-16, AC-17, AC-18)
