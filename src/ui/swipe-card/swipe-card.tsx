@@ -107,6 +107,20 @@ export function announcement(choice: SwipeChoice, title: string): string {
 }
 
 /**
+ * Keeps the drag coming to the poster even when the pointer leaves it. The
+ * browser throws when the pointer is no longer active, which is not worth
+ * stopping the gesture for, so that is ignored.
+ */
+function capturePointer(element: HTMLElement, pointerId: number, on: boolean) {
+  try {
+    if (on) element.setPointerCapture?.(pointerId);
+    else element.releasePointerCapture?.(pointerId);
+  } catch {
+    // The pointer is gone. The gesture carries on without capture.
+  }
+}
+
+/**
  * Speed over the last 100ms of the drag, in pixels per millisecond. Positive x
  * is right, positive y is down.
  */
@@ -210,7 +224,7 @@ export function SwipeCard({
       height: rect.height,
       samples: [{ t: performance.now(), x: event.clientX, y: event.clientY }],
     };
-    event.currentTarget.setPointerCapture?.(event.pointerId);
+    capturePointer(event.currentTarget, event.pointerId, true);
   }
 
   function handlePointerMove(event: PointerEvent<HTMLDivElement>) {
@@ -244,7 +258,7 @@ export function SwipeCard({
     const state = drag.current;
     if (!state || state.id !== event.pointerId) return;
     drag.current = null;
-    event.currentTarget.releasePointerCapture?.(event.pointerId);
+    capturePointer(event.currentTarget, event.pointerId, false);
     if (state.axis === null) return;
 
     const choice = canceled
