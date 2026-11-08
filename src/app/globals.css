@@ -1,26 +1,307 @@
 @import "tailwindcss" source("../");
 
+/*
+ * Moviz design tokens, "the subtitle line" (spec 0004). This file is the one
+ * source of truth for color, type, shape and motion. Components use these
+ * tokens and never a hex value or a font name. Dark only.
+ */
+
+/* Palette. Only the Tailwind tokens below exist, so a stray `bg-blue-500` fails. */
+@theme {
+  --color-*: initial;
+  --shadow-*: initial;
+  --radius-*: initial;
+
+  --color-pit: #170b10;
+  --color-curtain: #26121a;
+  --color-screen: #efe9df;
+  --color-dust: #b8a5ac;
+  --color-subtitle: #f5d547;
+  --color-exit: #ff7a6b;
+  --color-edge: #8f7480;
+  --color-transparent: transparent;
+
+  --radius-poster: 2px;
+  --radius-control: 6px;
+  --radius-sheet: 10px;
+
+  --font-sans: var(--font-atkinson), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: dark;
+
+  /* Motion: three moments plus 120ms state changes (spec 0004). */
+  --dur-state: 120ms;
+  --dur-reveal: 240ms;
+  --dur-card: 220ms;
+
+  /* Derived tokens. No new hex values. */
+  --surface-hover: color-mix(
+    in oklab,
+    var(--color-screen) 8%,
+    var(--color-curtain)
+  );
+  --primary-hover: color-mix(in oklab, var(--color-subtitle) 90%, white);
+  --primary-pressed: color-mix(in oklab, var(--color-subtitle) 90%, black);
+  --bar-bg: color-mix(in srgb, var(--color-pit) 88%, transparent);
+  --glow-drag: 0 0 48px
+    color-mix(in srgb, var(--color-subtitle) 14%, transparent);
 }
 
+/* Semantic names that shadcn components and Moviz components read. */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--color-pit);
+  --color-foreground: var(--color-screen);
+  --color-card: var(--color-curtain);
+  --color-card-foreground: var(--color-screen);
+  --color-popover: var(--color-curtain);
+  --color-popover-foreground: var(--color-screen);
+  --color-primary: var(--color-subtitle);
+  --color-primary-foreground: var(--color-pit);
+  --color-secondary: var(--color-curtain);
+  --color-secondary-foreground: var(--color-screen);
+  --color-muted: var(--color-curtain);
+  --color-muted-foreground: var(--color-dust);
+  --color-accent: var(--color-curtain);
+  --color-accent-foreground: var(--color-screen);
+  --color-destructive: var(--color-exit);
+  --color-border: var(--color-edge);
+  --color-input: var(--color-edge);
+  --color-ring: var(--color-screen);
+
+  --color-surface-hover: var(--surface-hover);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-pressed: var(--primary-pressed);
+  --color-bar: var(--bar-bg);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html {
+    background: var(--color-background);
+  }
+
+  body {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  /* One focus rule for everything. `outline` survives forced colors mode. */
+  :focus-visible {
+    outline: 3px solid var(--color-screen);
+    outline-offset: 3px;
+  }
+
+  /* Skip link target: focus lands on it, but no ring is wanted on the page. */
+  main:focus {
+    outline: none;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Type styles (spec 0004, Type). Archivo for the wordmark and headlines. */
+@utility type-wordmark {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-stretch: 125%;
+  letter-spacing: -0.02em;
+  font-size: clamp(4.5rem, 16vw, 9rem);
+  line-height: 0.9;
+}
+
+/* The small wordmark used in the header and the footer. */
+@utility type-brand {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-stretch: 125%;
+  letter-spacing: -0.02em;
+  font-size: 1.5rem;
+  line-height: 1.1;
+}
+
+@utility type-headline {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-stretch: 112%;
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  line-height: 1.05;
+}
+
+@utility type-section {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-stretch: 100%;
+  font-size: 1.75rem;
+  line-height: 1.2;
+}
+
+@utility type-title {
+  font-weight: 700;
+  font-size: 1.0625rem;
+  line-height: 1.3;
+}
+
+@utility type-reason {
+  color: var(--color-subtitle);
+  font-weight: 500;
+  font-size: 1.0625rem;
+  line-height: 1.4;
+}
+
+@utility type-small {
+  color: var(--color-dust);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+/* Layout: left aligned 1120px container, gutters 16, 24 and 32. */
+@utility page-container {
+  width: 100%;
+  max-width: calc(1120px + 2 * 16px);
+  margin-inline: auto;
+  padding-inline: 16px;
+
+  @media (min-width: 640px) {
+    max-width: calc(1120px + 2 * 24px);
+    padding-inline: 24px;
+  }
+
+  @media (min-width: 1024px) {
+    max-width: calc(1120px + 2 * 32px);
+    padding-inline: 32px;
+  }
+}
+
+/*
+ * The feed grid: as many 260px or wider columns as fit, 32px between rows and
+ * 24px between columns. On one column an item is at most 420px wide.
+ */
+@utility feed-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: 32px 24px;
+
+  & > * {
+    max-width: 420px;
+  }
+}
+
+/*
+ * Motion moment 2: the reason wipe. `ReasonReveal` sets `data-reveal` only on
+ * items below the fold, and never with reduced motion, so without script or
+ * with reduced motion the bar is simply visible.
+ */
+[data-reveal="hidden"] [data-slot="subtitle-bar"] {
+  clip-path: inset(0 100% 0 0);
+}
+
+[data-reveal="shown"] [data-slot="subtitle-bar"] {
+  clip-path: inset(0 0 0 0);
+  transition: clip-path var(--dur-reveal) var(--ease-out);
+
+  @media (prefers-reduced-motion: reduce) {
+    transition-duration: 0s;
+  }
+}
+
+/*
+ * The swipe card column. As wide as a poster that is at most 60% of the
+ * viewport height and 560px tall, but never narrower than 280px (so the three
+ * buttons fit) and never wider than the screen.
+ */
+@utility swipe-column {
+  width: min(100%, max(280px, calc(min(60dvh, 560px) * 2 / 3)));
+  margin-inline: auto;
+}
+
+/* The draggable poster. `touch-action: none` is on the poster only, so a finger on
+   the buttons or text still scrolls the page. */
+@utility swipe-poster {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+
+  & img {
+    -webkit-user-drag: none;
+    user-select: none;
+  }
+}
+
+/* The only shadow: a faint yellow glow while the card is dragged. */
+@utility glow-drag {
+  box-shadow: var(--glow-drag);
+}
+
+/*
+ * Motion moment 1, swipe response. While dragging, the poster follows the
+ * pointer (inline style). Once released it returns, or leaves in the direction
+ * of the choice. With reduced motion the poster still follows the pointer, but
+ * the exit and the return are instant.
+ */
+[data-slot="swipe-poster"] {
+  transition:
+    transform var(--dur-card) var(--ease-out),
+    opacity var(--dur-card) var(--ease-out);
+}
+
+[data-slot="swipe-poster"][data-phase="dragging"] {
+  transition: none;
+}
+
+[data-slot="swipe-poster"][data-exit="right"] {
+  transform: translateX(130%) rotate(8deg);
+  opacity: 0;
+}
+
+[data-slot="swipe-poster"][data-exit="left"] {
+  transform: translateX(-130%) rotate(-8deg);
+  opacity: 0;
+}
+
+[data-slot="swipe-poster"][data-exit="up"] {
+  transform: translateY(-130%);
+  opacity: 0;
+}
+
+/* Motion moment 3, deck advance: the next card scales in and fades in. */
+@keyframes deck-advance {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+[data-slot="swipe-card"][data-enter="advance"] {
+  animation: deck-advance var(--dur-card) var(--ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-slot="swipe-poster"] {
+    transition: none;
+  }
+
+  [data-slot="swipe-card"][data-enter="advance"] {
+    animation: none;
+  }
+}
+
+/* Motion: color changes on hover, focus and press take 120ms. */
+@utility state-change {
+  transition-property: color, background-color, border-color;
+  transition-duration: var(--dur-state);
+  transition-timing-function: var(--ease-out);
+
+  @media (prefers-reduced-motion: reduce) {
+    transition-duration: 0s;
+  }
 }

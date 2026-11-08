@@ -1,10 +1,24 @@
-export default function Home() {
-  return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center">
-      <h1 className="text-3xl font-semibold tracking-tight">Moviz</h1>
-      <p className="text-zinc-600 dark:text-zinc-400">
-        Movie picks that tell you why. Coming soon.
-      </p>
-    </main>
-  );
+import { Hero } from "@/ui/landing/hero";
+import type { HeroPick } from "@/ui/landing/hero-picks";
+import { loadHeroPick } from "@/ui/landing/load-hero-pick";
+
+// The hero poster comes from the catalog. Refresh it hourly, not on every visit.
+export const revalidate = 3600;
+
+/**
+ * Reads the hero pick. The database module is imported here, not at the top, so
+ * a build with no `DATABASE_URL` (as in CI) still renders the empty poster
+ * frame instead of failing. The page refreshes within the hour.
+ */
+async function getHeroPick(): Promise<HeroPick | null> {
+  try {
+    const { db } = await import("@/db/client");
+    return await loadHeroPick(db);
+  } catch {
+    return null;
+  }
+}
+
+export default async function Home() {
+  return <Hero pick={await getHeroPick()} />;
 }

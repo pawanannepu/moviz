@@ -27,6 +27,8 @@ const envSchema = z.object({
   VOYAGE_API_KEY: optionalSecret,
   /** Bearer token Vercel sends to cron routes. The route fails closed when unset. */
   CRON_SECRET: optionalSecret,
+  /** Set by Vercel (`production`, `preview` or `development`). Only hides the `/design` page in production (spec 0004). */
+  VERCEL_ENV: optionalSecret,
 });
 
 export type Env = z.infer<typeof envSchema>;

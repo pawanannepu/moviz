@@ -16,8 +16,8 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 1 | Stack & architecture | Foundation | done |
 | 2 | Coding standards & tooling | Foundation | done |
 | 3 | Data model | Foundation | done |
-| 4 | Movie catalog | Foundation | in-progress |
-| 5 | Design system & UI foundation | Foundation | planned |
+| 4 | Movie catalog | Foundation | done |
+| 5 | Design system & UI foundation | Foundation | in-progress |
 | 6 | Email sign in | Slice 1 | planned |
 | 7 | Swipe onboarding | Slice 1 | planned |
 | 8 | Taste profile & recommender | Slice 1 | planned |
@@ -76,10 +76,20 @@ spec [0003](../specs/0003-movie-catalog/index.md) · code in `src/catalog/`, `dr
 - [x] Verify it: `/check verify movie catalog`
 - [x] Test it: `/test movie catalog`
 
-### 5. Design system & UI foundation · needs a decision
+### 5. Design system & UI foundation
 Visual language, layout, and base components, including the swipe card and movie card, so every screen feels cohesive and works on phones.
 **Done when:** `design.md` covers type, color, spacing, and components, and base components handle focus and keyboard. The swipe card has a button alternative.
-- [ ] Design it (spec): `/architect design system & UI foundation`
+spec [0004](../specs/0004-design-system-ui-foundation/index.md)
+code in [src/ui/](../../src/ui/)
+- [x] Design it (spec): `/architect design system & UI foundation`
+- [ ] Build it: `/develop design system & UI foundation`
+  - [x] Thread: tokens, fonts, layout pieces, and the real landing page (AC-1, AC-4, AC-5, AC-7, AC-15)
+  - [x] Contrast guard, primitives, states, and the `/design` page (AC-3, AC-6, AC-14, AC-17)
+  - [x] Movie card and feed item with the reason bar (AC-8, AC-9, AC-13, AC-19)
+  - [x] Swipe card: buttons, drag, keyboard (AC-10, AC-11, AC-12, AC-13, AC-19)
+  - [ ] Browser tests, gates, and `design.md` (AC-2, AC-16, AC-17, AC-18)
+- [ ] Verify it: `/check verify design system & UI foundation`
+- [ ] Test it: `/test design system & UI foundation`
 
 ## Slice 1: Core loop (the first working thread)
 
