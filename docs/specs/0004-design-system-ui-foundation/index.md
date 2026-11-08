@@ -1,7 +1,7 @@
 # 0004. Design system and UI foundation: "the subtitle line"
 
 **Date**: 2026-11-08
-**Status**: Proposed
+**Status**: In Progress
 
 ## Summary
 
@@ -261,7 +261,7 @@ The feed is a CSS grid, `repeat(auto-fill, minmax(min(100%, 260px), 1fr))`, in t
 
 Approach: Tracer Bullet. The first task cuts one thread through every layer (tokens, fonts, shadcn, shell, catalog read, landing page). Later tasks thicken one strand at a time.
 
-1. **Thread: tokens, fonts, layout pieces and landing.** Rewrite `globals.css` with the tokens, add the Archivo and Atkinson fonts, make the root layout dark only with the viewport settings, run `shadcn init` (adds `components.json`, `cn`, dependencies) and add `Button`. Add the skip link, `main` and the restyled TMDB footer to the root layout (once), and `SiteHeader`. Update the two existing tests that this changes: `e2e/tmdb-footer.spec.ts` (drop the light and dark color scheme loop) and `src/catalog/tmdb-attribution.test.tsx` (new markup). Build `Hero` with `loadHeroPick` (fixed picks through the catalog, `revalidate = 3600`) and the empty frame fallback, and replace the placeholder `/`. Confirm `pnpm build` passes with no `DATABASE_URL` set, as CI does; if the database module throws on import, make the hero read tolerate that. Satisfies **AC-1**, **AC-4**, **AC-5**, **AC-7**, **AC-15**
+1. [x] **Thread: tokens, fonts, layout pieces and landing.** Rewrite `globals.css` with the tokens, add the Archivo and Atkinson fonts, make the root layout dark only with the viewport settings, run `shadcn init` (adds `components.json`, `cn`, dependencies) and add `Button`. Add the skip link, `main` and the restyled TMDB footer to the root layout (once), and `SiteHeader`. Update the two existing tests that this changes: `e2e/tmdb-footer.spec.ts` (drop the light and dark color scheme loop) and `src/catalog/tmdb-attribution.test.tsx` (new markup). Build `Hero` with `loadHeroPick` (fixed picks through the catalog, `revalidate = 3600`) and the empty frame fallback, and replace the placeholder `/`. Confirm `pnpm build` passes with no `DATABASE_URL` set, as CI does; if the database module throws on import, make the hero read tolerate that. Satisfies **AC-1**, **AC-4**, **AC-5**, **AC-7**, **AC-15**
 2. **Contrast guard.** Unit test that parses the color tokens from `globals.css` and checks every pair in the table. Satisfies **AC-3**
 3. **Remaining primitives and states.** Add `Input`, `Label`, `Skeleton`, `Sonner` through shadcn and restyle; write `Field`, `EmptyState`, `ErrorState`, `LoadingState`. Add the `/design` page (gated) showing every component and state. Satisfies **AC-6**, **AC-14**, **AC-17**
 4. **Movie card and feed item.** `PosterImage`, `MovieCard` with poster, fallbacks and the subtitle bar; `FeedItem` with `ReasonReveal`; `MovieCardSkeleton`. Add both to `/design`, including the 200 character reason. Satisfies **AC-8**, **AC-9**, **AC-13**, **AC-19** (for these pieces)

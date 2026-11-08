@@ -80,9 +80,10 @@ spec [0003](../specs/0003-movie-catalog/index.md) · code in `src/catalog/`, `dr
 Visual language, layout, and base components, including the swipe card and movie card, so every screen feels cohesive and works on phones.
 **Done when:** `design.md` covers type, color, spacing, and components, and base components handle focus and keyboard. The swipe card has a button alternative.
 spec [0004](../specs/0004-design-system-ui-foundation/index.md)
+code in [src/ui/](../../src/ui/)
 - [x] Design it (spec): `/architect design system & UI foundation`
 - [ ] Build it: `/develop design system & UI foundation`
-  - [ ] Thread: tokens, fonts, layout pieces, and the real landing page (AC-1, AC-4, AC-5, AC-7, AC-15)
+  - [x] Thread: tokens, fonts, layout pieces, and the real landing page (AC-1, AC-4, AC-5, AC-7, AC-15)
   - [ ] Contrast guard, primitives, states, and the `/design` page (AC-3, AC-6, AC-14, AC-17)
   - [ ] Movie card and feed item with the reason bar (AC-8, AC-9, AC-13, AC-19)
   - [ ] Swipe card: buttons, drag, keyboard (AC-10, AC-11, AC-12, AC-13, AC-19)

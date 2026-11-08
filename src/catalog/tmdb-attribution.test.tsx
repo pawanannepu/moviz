@@ -26,10 +26,10 @@ describe("TmdbAttribution (AC-14)", () => {
   });
 
   it("sets the logo smaller than the Moviz name", () => {
-    // The name is 20px type (text-xl). The logo is 12px high.
+    // The name is set in the brand style (1.5rem, 24px). The logo is 12px high.
     const height = Number(/height="(\d+)"/.exec(html)?.[1]);
 
-    expect(height).toBeLessThan(20);
-    expect(html).toContain("text-xl");
+    expect(height).toBeLessThan(24);
+    expect(html).toContain("type-brand");
   });
 });
