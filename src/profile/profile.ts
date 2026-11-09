@@ -1,4 +1,5 @@
 import { eq, sql } from "drizzle-orm";
+import { TERMS_VERSION } from "@/auth/terms";
 import type { Db } from "@/db/create-db";
 import {
   type DbUnavailable,
@@ -45,9 +46,16 @@ export async function getProfile(
       .where(eq(profiles.userId, input.userId));
     if (existing) return ok(existing);
 
+    // The backstop for a user whose sign up hook failed to write the profile:
+    // it carries the same terms fields, so no user is left without them
+    // (spec 0005, AC-12).
     await db
       .insert(profiles)
-      .values({ userId: input.userId })
+      .values({
+        userId: input.userId,
+        termsAcceptedAt: sql`now()`,
+        termsVersion: TERMS_VERSION,
+      })
       .onConflictDoNothing();
     const [created] = await db
       .select()

@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import RootLayout, { viewport } from "./layout";
@@ -41,5 +43,16 @@ describe("root layout (AC-7)", () => {
 
   it("is dark only (AC-1)", () => {
     expect(viewport.colorScheme).toBe("dark");
+  });
+
+  it("colors the browser bar with the Pit page background (AC-1)", () => {
+    const css = readFileSync(
+      join(process.cwd(), "src/app/globals.css"),
+      "utf8",
+    );
+    const pit = css.match(/--color-pit:\s*(#[0-9a-fA-F]{6})/)?.[1];
+
+    expect(pit).toBeTruthy();
+    expect(String(viewport.themeColor).toLowerCase()).toBe(pit?.toLowerCase());
   });
 });

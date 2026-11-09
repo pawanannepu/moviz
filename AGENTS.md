@@ -11,7 +11,7 @@ Source of truth: [docs/specs/0001-stack-architecture/index.md](docs/specs/0001-s
 - **Data**: Postgres on Neon with pgvector, Drizzle ORM over a `pg` Pool, Zod at every boundary
 - **Services**: Better Auth (email sign in), Resend (email), Voyage AI (embeddings), Vercel (hosting and cron)
 - **Package manager**: pnpm 10 (pinned in `packageManager`)
-- Built so far: the Next.js scaffold, the data layer (`src/db`, `src/auth`, `src/profile`, `src/ratings`, `src/user-data`) and the movie catalog (`src/catalog`, with a daily cron at `/api/cron/catalog`). Email and the product UI arrive with the feature that needs them.
+- Built so far: the Next.js scaffold, the data layer (`src/db`, `src/auth`, `src/profile`, `src/ratings`, `src/user-data`) and the movie catalog (`src/catalog`, with a daily cron at `/api/cron/catalog`). The design system and UI foundation (`src/ui`, `design.md`, the landing page at `/` and the review page at `/design`). Email and the product screens arrive with the feature that needs them.
 
 ## Build approach
 
@@ -31,6 +31,7 @@ pnpm format      # Biome format, writes changes
 pnpm test        # Vitest unit and integration (src/**/*.test.ts); database tests need DATABASE_URL_TEST and skip without it
 pnpm test:watch  # Vitest in watch mode
 pnpm test:e2e    # Playwright end to end and axe accessibility scans (e2e/*.spec.ts)
+pnpm test:e2e:production # builds, starts with VERCEL_ENV=production on port 3100, checks /design is a 404
 pnpm db:generate # drizzle-kit: write a migration from the schema change
 pnpm db:migrate  # apply migrations to the database in .env.local (check which branch first)
 pnpm catalog:seed    # load the TMDB catalog, resumable (--target <n>, --id <tmdbId>); needs TMDB_API_TOKEN
@@ -51,12 +52,13 @@ Stored in `docs/specs/`. Format: `docs/specs/NNNN-title/index.md`.
 - Use one error handling pattern for Server Actions and Route Handlers: return a typed result and map it to a clear user message at the edge.
 - TypeScript stays `strict`: no `any`, exhaustive types. Document exported functions that other features call with a short doc comment.
 - Accessibility baseline is WCAG AA: keyboard, visible focus, labels, contrast. Swipe always has a button alternative.
+- Design system: build all UI to [design.md](design.md) (dark only, the Pit, Curtain, Screen, Dust, Subtitle, Exit and Edge palette, the three motion moments); token values live in `src/app/globals.css`, components in `src/ui/`.
 - Schema changes go through Drizzle migrations only. All database code runs on the Node.js runtime.
 - Commit messages follow Conventional Commits, for example `feat(auth): add password reset`.
 
 ## Tooling
 
-Chosen here, installed by `/develop tooling`. Installed: Biome (`biome.json`), the Husky pre commit hook (`.husky/pre-commit`, runs lint-staged then typecheck), CI (`.github/workflows/ci.yml`, runs `pnpm test` but not Playwright yet), Vitest (`vitest.config.ts`), and Playwright (`playwright.config.ts`, Chromium only). Runner choices are saved in `test-preferences.json`. Vitest suites cover the data model and the catalog, and one Playwright spec (`e2e/tmdb-footer.spec.ts`) covers the TMDB footer. Shared test helpers live in `src/test-support/`.
+Chosen here, installed by `/develop tooling`. Installed: Biome (`biome.json`), the Husky pre commit hook (`.husky/pre-commit`, runs lint-staged then typecheck), CI (`.github/workflows/ci.yml`, runs `pnpm test` but not Playwright yet), Vitest (`vitest.config.ts`), and Playwright (`playwright.config.ts`, Chromium only). Runner choices are saved in `test-preferences.json`. Vitest suites cover the data model, the catalog and `src/ui` (component tests opt in to happy-dom per file with `// @vitest-environment happy-dom`). Playwright specs cover the TMDB footer, the landing page and `/design`. Shared test helpers live in `src/test-support/`.
 
 - Lint and format: Biome (one tool, one config file).
 - Before each commit: lint, format, and typecheck.
@@ -94,6 +96,7 @@ MCP servers: Neon (recommended, connect it yourself, use read only mode on produ
 ## Context files
 
 - [src/catalog/AGENTS.md](src/catalog/AGENTS.md): TMDB sync, cron job, embeddings, title matching and the listable rule for the movie catalog
+- [src/ui/AGENTS.md](src/ui/AGENTS.md): design tokens, primitives, movie and feed cards, the swipe card, page states, the landing hero and the `/design` page
 
 _Drafted by /audit from the repo, worth a quick human pass. Edit freely: once a line stops matching this draft, later runs treat it as curated and will flag rather than overwrite it._
 

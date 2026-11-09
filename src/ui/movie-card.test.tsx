@@ -82,6 +82,15 @@ describe("MovieCard (AC-8)", () => {
     ).toBe("https://image.tmdb.org/t/p/w500/heat.jpg");
   });
 
+  it("shows no meta line when the movie has no year and no genres", () => {
+    const { container } = render(
+      <MovieCard movie={{ ...heat, releaseYear: null, genres: [] }} />,
+    );
+
+    expect(screen.getByRole("heading", { name: "Heat" })).toBeTruthy();
+    expect(container.textContent).toBe("Heat");
+  });
+
   it("shows a title frame when the movie has no poster", () => {
     const { container } = render(
       <MovieCard movie={{ ...heat, posterPath: null }} />,

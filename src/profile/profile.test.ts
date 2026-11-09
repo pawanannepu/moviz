@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
+import { TERMS_VERSION } from "@/auth/terms";
 import { profiles } from "@/db/schema";
 import {
   forbiddenDb,
@@ -35,7 +36,7 @@ describe.skipIf(!TEST_DATABASE_URL)("profile (database)", () => {
   };
 
   describe("getProfile", () => {
-    it("creates an empty profile when none exists (AC-17)", async () => {
+    it("creates a profile with the terms fields when none exists (AC-17, spec 0005 AC-12)", async () => {
       const user = await t.fx.newUser();
       expect(await profileOf(user.id)).toBeUndefined();
 
@@ -48,9 +49,9 @@ describe.skipIf(!TEST_DATABASE_URL)("profile (database)", () => {
           country: null,
           countrySource: null,
           onboardedAt: null,
-          termsAcceptedAt: null,
-          termsVersion: null,
+          termsVersion: TERMS_VERSION,
         });
+        expect(result.value.termsAcceptedAt).toBeInstanceOf(Date);
       }
       expect(await profileOf(user.id)).toBeDefined();
     });

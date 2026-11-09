@@ -17,8 +17,8 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 2 | Coding standards & tooling | Foundation | done |
 | 3 | Data model | Foundation | done |
 | 4 | Movie catalog | Foundation | done |
-| 5 | Design system & UI foundation | Foundation | in-progress |
-| 6 | Email sign in | Slice 1 | planned |
+| 5 | Design system & UI foundation | Foundation | done |
+| 6 | Email sign in | Slice 1 | in-progress |
 | 7 | Swipe onboarding | Slice 1 | planned |
 | 8 | Taste profile & recommender | Slice 1 | planned |
 | 9 | Personalized feed with reasons | Slice 1 | planned |
@@ -88,17 +88,27 @@ code in [src/ui/](../../src/ui/)
   - [x] Movie card and feed item with the reason bar (AC-8, AC-9, AC-13, AC-19)
   - [x] Swipe card: buttons, drag, keyboard (AC-10, AC-11, AC-12, AC-13, AC-19)
   - [x] Browser tests, gates, and `design.md` (AC-2, AC-16, AC-17, AC-18)
-- [ ] Verify it: `/check verify design system & UI foundation`
-- [ ] Test it: `/test design system & UI foundation`
+- [x] Verify it: `/check verify design system & UI foundation`
+- [x] Test it: `/test design system & UI foundation`
 
 ## Slice 1: Core loop (the first working thread)
 
 Sign in, swipe a few movies, see a feed with reasons. Real auth, real data, real UI, just narrow. This slice is also the walking skeleton.
 
-### 6. Email sign in · needs a decision · GA
+### 6. Email sign in · GA
 Create an account and sign in with email, stay signed in, and reset a forgotten password.
 **Done when:** a new user can sign up, sign in, sign out, and reset access by email; signed out users cannot reach personal pages; errors and empty states are clear.
-- [ ] Design it (spec): `/architect email sign in`
+spec [0005](../specs/0005-email-sign-in/index.md) · code in `src/auth/`, `src/email/`, `src/app/(auth)/`, `src/app/(protected)/`, `src/app/api/auth/`
+- [x] Design it (spec): `/architect email sign in`
+- [x] Build it: `/develop email sign in`
+  - [x] Thread: sign up, verify email, land signed in on `/home`, sign out (AC-1, AC-2, AC-5, AC-12, AC-14, AC-15, AC-16)
+  - [x] Sign in and protect every page: return path, route guard, session renewal, signed in redirects (AC-3, AC-4, AC-8, AC-9)
+  - [x] Password reset and the no leak rules (AC-6, AC-7)
+  - [x] GA hardening: Turnstile, rate limits, real Resend email, delete user hook, form polish (AC-10, AC-11, AC-13, AC-14, AC-15)
+- [ ] Verify it: `/check verify email sign in`
+- [ ] Test it: `/test email sign in`
+- [ ] Review it (fresh model): `/check review email sign in`
+- [ ] Document it: `/document email sign in`
 
 ### 7. Swipe onboarding · needs a decision
 A swipe deck of well known movies where you say liked, disliked, or not seen, so a new user with no history gets a taste profile fast.

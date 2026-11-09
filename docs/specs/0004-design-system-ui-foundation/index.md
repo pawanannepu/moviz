@@ -1,7 +1,7 @@
 # 0004. Design system and UI foundation: "the subtitle line"
 
 **Date**: 2026-11-08
-**Status**: In Progress
+**Status**: Accepted
 
 ## Summary
 

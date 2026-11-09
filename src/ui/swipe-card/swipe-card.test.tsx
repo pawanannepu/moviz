@@ -91,6 +91,17 @@ describe("SwipeCard buttons (AC-10)", () => {
   });
 });
 
+describe("SwipeCard poster (AC-8)", () => {
+  it("shows the w500 poster with the alt text 'Poster for {title}'", () => {
+    setUp();
+    const poster = screen.getByRole("img", { name: "Poster for Heat" });
+
+    expect(poster.getAttribute("src")).toBe(
+      "https://image.tmdb.org/t/p/w500/heat.jpg",
+    );
+  });
+});
+
 describe("SwipeCard keyboard and semantics (AC-12)", () => {
   it("is a group named with the title and year, described by the visible hint", () => {
     const { card } = setUp();
