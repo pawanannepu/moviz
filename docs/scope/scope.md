@@ -20,7 +20,7 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 5 | Design system & UI foundation | Foundation | done |
 | 6 | Email sign in | Slice 1 | done |
 | 7 | Swipe onboarding | Slice 1 | done |
-| 8 | Taste profile & recommender | Slice 1 | in-progress |
+| 8 | Taste profile & recommender | Slice 1 | done |
 | 9 | Personalized feed with reasons | Slice 1 | planned |
 | 10 | Product analytics & error monitoring | Slice 2 | planned |
 | 11 | Letterboxd CSV import | Slice 3 | planned |

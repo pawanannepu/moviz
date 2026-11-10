@@ -47,6 +47,7 @@ Both scripts load `.env.local` and write to the database it names, so check whic
 ## Gotchas
 
 - Database test files run in parallel on one shared test branch. Global operations (embedding every listable movie, refreshing the oldest 100, deleting orphan people) can touch another file's rows. Give each test its own ids from `newTmdbId()` and clean up after, and keep assertions to the test's own movies.
+- The embed sweep (`embedMovies`) overwrites the vector of any listable movie whose stored `text_hash` is not the hash of its real text, and gives one to any listable movie that has none. A test that writes its own vectors must store the real hash (`buildEmbeddingText` then `hashEmbeddingText`) and insert the movie and its vector in one transaction. See `src/test-support/recommend-fixtures.ts`.
 - Database tests must use the Neon test branch through `DATABASE_URL_TEST`. The harness refuses a URL whose host matches the dev branch.
 - `release_year` and `search` on `movies` are generated columns. Never write them.
 - `deleteOrphanPeople` takes the all writes lock exclusively, so it waits for writes in flight. Do not call it inside a movie write.

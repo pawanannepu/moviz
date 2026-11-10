@@ -11,7 +11,7 @@ Source of truth: [docs/specs/0001-stack-architecture/index.md](docs/specs/0001-s
 - **Data**: Postgres on Neon with pgvector, Drizzle ORM over a `pg` Pool, Zod at every boundary
 - **Services**: Better Auth (email sign in), Resend (email), Voyage AI (embeddings), Vercel (hosting and cron)
 - **Package manager**: pnpm 10 (pinned in `packageManager`)
-- Built so far: the Next.js scaffold, the data layer (`src/db`, `src/auth`, `src/profile`, `src/ratings`, `src/user-data`) and the movie catalog (`src/catalog`, with a daily cron at `/api/cron/catalog`). The design system and UI foundation (`src/ui`, `design.md`, the landing page at `/` and the review page at `/design`). Email sign in (`src/auth`, `src/email`, the pages in `src/app/(auth)` and `src/app/(protected)`, and the route guard in `src/proxy.ts`). Swipe onboarding (`src/onboarding`, the page at `/onboarding`, and the gate on `/home`). The product screens arrive with the feature that needs them.
+- Built so far: the Next.js scaffold, the data layer (`src/db`, `src/auth`, `src/profile`, `src/ratings`, `src/user-data`) and the movie catalog (`src/catalog`, with a daily cron at `/api/cron/catalog`). The design system and UI foundation (`src/ui`, `design.md`, the landing page at `/` and the review page at `/design`). Email sign in (`src/auth`, `src/email`, the pages in `src/app/(auth)` and `src/app/(protected)`, and the route guard in `src/proxy.ts`). Swipe onboarding (`src/onboarding`, the page at `/onboarding`, and the gate on `/home`). The taste recommender (`src/recommend`, a server function the feed will call). The product screens arrive with the feature that needs them.
 
 ## Build approach
 
@@ -101,6 +101,7 @@ MCP servers: Neon (recommended, connect it yourself, use read only mode on produ
 - [src/catalog/AGENTS.md](src/catalog/AGENTS.md): TMDB sync, cron job, embeddings, title matching and the listable rule for the movie catalog
 - [src/email/AGENTS.md](src/email/AGENTS.md): sending email through Resend or the local console, the auth email templates and the never throw rule
 - [src/onboarding/AGENTS.md](src/onboarding/AGENTS.md): the swipe onboarding deck, its rules, Server Actions and the `/home` gate
+- [src/recommend/AGENTS.md](src/recommend/AGENTS.md): the taste recommender, how a pick is scored, its reasons, and how its database tests share one branch
 - [src/ui/AGENTS.md](src/ui/AGENTS.md): design tokens, primitives, movie and feed cards, the swipe card, page states, the landing hero and the `/design` page
 
 _Drafted by /audit from the repo, worth a quick human pass. Edit freely: once a line stops matching this draft, later runs treat it as curated and will flag rather than overwrite it._
