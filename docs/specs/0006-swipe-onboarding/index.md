@@ -1,7 +1,7 @@
 # 0006. Swipe onboarding: a first run deck at /onboarding, saved one swipe at a time
 
 **Date**: 2026-11-10
-**Status**: In Progress
+**Status**: Accepted
 
 ## Summary
 
