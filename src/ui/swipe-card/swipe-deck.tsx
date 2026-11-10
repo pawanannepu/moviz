@@ -19,6 +19,14 @@ type SwipeDeckProps = {
   pending?: boolean;
   /** Shown when there is no movie. */
   empty?: ReactNode;
+  /**
+   * Hands every announcement to the screen instead of the deck's own live
+   * region, for a screen that says the result and a count in one message. When
+   * set, the deck renders no live region.
+   */
+  onAnnounce?: (message: string) => void;
+  /** What should hold focus when the first card appears (for example after an undo). */
+  initialFocus?: FocusTarget;
 };
 
 /**
@@ -33,12 +41,16 @@ export function SwipeDeck({
   onDecide,
   pending = false,
   empty = null,
+  onAnnounce,
+  initialFocus,
 }: SwipeDeckProps) {
   const [message, setMessage] = useState("");
   const [shown, setShown] = useState(movie);
   const [entering, setEntering] = useState(false);
   const focusNext = useRef<FocusTarget | undefined>(undefined);
   const leaving = useRef(false);
+  // Applies to the first card only; every later card follows the last decision.
+  const mountFocus = useRef(initialFocus);
 
   const movieId = movie?.id ?? null;
   const shownId = shown?.id ?? null;
@@ -53,6 +65,7 @@ export function SwipeDeck({
         : 0;
     const timer = window.setTimeout(() => {
       leaving.current = false;
+      mountFocus.current = undefined;
       setEntering(shownId !== null);
       setShown(movie);
     }, wait);
@@ -79,17 +92,19 @@ export function SwipeDeck({
 
   return (
     <div data-slot="swipe-deck">
-      <p aria-live="polite" role="status" className="sr-only">
-        {message}
-      </p>
+      {onAnnounce ? null : (
+        <p aria-live="polite" role="status" className="sr-only">
+          {message}
+        </p>
+      )}
       {current ? (
         <SwipeCard
           key={current.id}
           movie={current}
           onDecide={handleDecide}
           pending={pending}
-          announce={setMessage}
-          initialFocus={entering ? focusNext.current : undefined}
+          announce={onAnnounce ?? setMessage}
+          initialFocus={entering ? focusNext.current : mountFocus.current}
           entering={entering}
         />
       ) : (

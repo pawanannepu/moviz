@@ -8,6 +8,7 @@ import {
   type Page,
   test,
 } from "@playwright/test";
+import { Pool } from "pg";
 import { uniqueClientIp } from "./unique-ip";
 
 /** The port the auth server listens on (see `playwright.auth.config.ts`). */
@@ -200,14 +201,44 @@ export async function verifyViaApi(
   expect(response.status()).toBe(302);
 }
 
-/** A verified account, made through the API so a test does not repeat the sign up flow. */
+/**
+ * Marks an account as having finished onboarding (spec 0006), straight in the
+ * database the server uses. Without it, signing in lands on `/onboarding`
+ * instead of `/home`, which the auth specs are not about.
+ */
+export async function markOnboardedInDb(email: string): Promise<void> {
+  try {
+    process.loadEnvFile(".env.local");
+  } catch {
+    // No local env file (for example in CI). The real environment is used.
+  }
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  try {
+    const result = await pool.query(
+      `update profiles set onboarded_at = coalesce(onboarded_at, now())
+       where user_id = (select id from "user" where email = $1)`,
+      [email],
+    );
+    expect(result.rowCount, "the account must have a profile row").toBe(1);
+  } finally {
+    await pool.end();
+  }
+}
+
+/**
+ * A verified account, made through the API so a test does not repeat the sign
+ * up flow. It has finished onboarding unless `onboarded` is false, so signing
+ * in lands on `/home`.
+ */
 export async function createVerifiedAccount(
   request: APIRequestContext,
   tag: string,
+  options: { onboarded?: boolean } = {},
 ): Promise<Account> {
   const email = newEmail(tag);
   await signUpViaApi(request, email);
   await verifyViaApi(request, email);
+  if (options.onboarded !== false) await markOnboardedInDb(email);
   return { email, password: PASSWORD };
 }
 

@@ -26,6 +26,20 @@ describe("safeReturnPath (AC-4)", () => {
     expect(safeReturnPath(raw)).toBe(HOME_PATH);
   });
 
+  // The URL parser removes dot segments, so these only become `//evil.com`
+  // after parsing. A browser reads that as another site.
+  it.each([
+    "/.//evil.com",
+    "/..//evil.com",
+    "/a/..//evil.com",
+    "/%2e//evil.com",
+    "/%2E%2E//evil.com",
+    "/.///evil.com",
+    "/.//evil.com/home?x=1",
+  ])("falls back to home for the dot segment value %s", (raw) => {
+    expect(safeReturnPath(raw)).toBe(HOME_PATH);
+  });
+
   it.each([
     "/\t/evil.com",
     "/\n/evil.com",

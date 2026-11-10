@@ -3,8 +3,14 @@
  * from client components and from `src/proxy.ts`.
  */
 
-/** Where a signed in user lands. Specs 7 and 9 point this at the swipe deck or the feed. */
+/**
+ * Where a signed in user lands. A user who has not finished onboarding is sent
+ * on to `ONBOARDING_PATH`; feature 9 replaces the page with the feed.
+ */
 export const HOME_PATH = "/home";
+
+/** The first run swipe deck (spec 0006). Closed to signed out visitors like every page. */
+export const ONBOARDING_PATH = "/onboarding";
 
 /** Where "Start swiping" goes. */
 export const SIGN_UP_PATH = "/sign-up";

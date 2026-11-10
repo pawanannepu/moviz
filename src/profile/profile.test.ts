@@ -8,7 +8,7 @@ import {
   UNKNOWN_USER_ID,
   useTestDb,
 } from "@/test-support/test-db";
-import { getProfile, upsertProfile } from "./profile";
+import { getProfile, markOnboarded, upsertProfile } from "./profile";
 
 describe("upsertProfile country checks", () => {
   it.each(["USA", "U", "1", "12", "", "   ", "U!", "é"])(
@@ -284,5 +284,52 @@ describe.skipIf(!TEST_DATABASE_URL)("profile (database)", () => {
       countrySource: "user",
     });
     expect(result).toEqual({ ok: false, error: { code: "user_not_found" } });
+  });
+
+  describe("markOnboarded (spec 0006, AC-7)", () => {
+    it("sets onboarded_at from empty to now", async () => {
+      const user = await t.fx.newUser();
+      await getProfile(t.db, { userId: user.id });
+      const before = Date.now() - 60_000;
+
+      const result = await markOnboarded(t.db, { userId: user.id });
+
+      if (!result.ok)
+        throw new Error(`markOnboarded failed: ${result.error.code}`);
+      expect(result.value.onboardedAt.getTime()).toBeGreaterThan(before);
+      expect((await profileOf(user.id))?.onboardedAt).toEqual(
+        result.value.onboardedAt,
+      );
+    });
+
+    it("keeps the first timestamp when it is called again, and still succeeds", async () => {
+      const user = await t.fx.newUser();
+      await getProfile(t.db, { userId: user.id });
+      const first = await markOnboarded(t.db, { userId: user.id });
+      const stamped = (await profileOf(user.id))?.updatedAt;
+
+      const second = await markOnboarded(t.db, { userId: user.id });
+
+      if (!first.ok || !second.ok) throw new Error("markOnboarded failed");
+      expect(second.value.onboardedAt).toEqual(first.value.onboardedAt);
+      expect((await profileOf(user.id))?.updatedAt).toEqual(stamped);
+    });
+
+    it("changes only the caller's own profile", async () => {
+      const mine = await t.fx.newUser();
+      const other = await t.fx.newUser();
+      await getProfile(t.db, { userId: mine.id });
+      await getProfile(t.db, { userId: other.id });
+
+      await markOnboarded(t.db, { userId: mine.id });
+
+      expect((await profileOf(other.id))?.onboardedAt).toBeNull();
+    });
+
+    it("returns user_not_found when there is no profile row", async () => {
+      const result = await markOnboarded(t.db, { userId: UNKNOWN_USER_ID });
+
+      expect(result).toEqual({ ok: false, error: { code: "user_not_found" } });
+    });
   });
 });

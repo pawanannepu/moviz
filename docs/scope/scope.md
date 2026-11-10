@@ -18,8 +18,8 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 3 | Data model | Foundation | done |
 | 4 | Movie catalog | Foundation | done |
 | 5 | Design system & UI foundation | Foundation | done |
-| 6 | Email sign in | Slice 1 | in-progress |
-| 7 | Swipe onboarding | Slice 1 | planned |
+| 6 | Email sign in | Slice 1 | done |
+| 7 | Swipe onboarding | Slice 1 | in-progress |
 | 8 | Taste profile & recommender | Slice 1 | planned |
 | 9 | Personalized feed with reasons | Slice 1 | planned |
 | 10 | Product analytics & error monitoring | Slice 2 | planned |
@@ -105,15 +105,25 @@ spec [0005](../specs/0005-email-sign-in/index.md) · code in `src/auth/`, `src/e
   - [x] Sign in and protect every page: return path, route guard, session renewal, signed in redirects (AC-3, AC-4, AC-8, AC-9)
   - [x] Password reset and the no leak rules (AC-6, AC-7)
   - [x] GA hardening: Turnstile, rate limits, real Resend email, delete user hook, form polish (AC-10, AC-11, AC-13, AC-14, AC-15)
-- [ ] Verify it: `/check verify email sign in`
-- [ ] Test it: `/test email sign in`
-- [ ] Review it (fresh model): `/check review email sign in`
-- [ ] Document it: `/document email sign in`
+- [x] Verify it: `/check verify email sign in`
+- [x] Test it: `/test email sign in`
+- [x] Review it (fresh model): `/check review email sign in`
+- [x] Document it: `/document email sign in`
 
-### 7. Swipe onboarding · needs a decision
+### 7. Swipe onboarding
 A swipe deck of well known movies where you say liked, disliked, or not seen, so a new user with no history gets a taste profile fast.
 **Done when:** a new user swipes through a deck (gesture or buttons), their choices are saved as ratings, they can stop at any point once enough signal exists, and they land on the feed.
-- [ ] Design it (spec): `/architect swipe onboarding`
+spec [0006](../specs/0006-swipe-onboarding/index.md) · code in `src/onboarding/`, `src/app/(protected)/onboarding/`
+- [x] Design it (spec): `/architect swipe onboarding`
+- [x] Build it: `/develop swipe onboarding`
+  - [x] Thread: gate, deck, save, finish (AC-1, AC-3, AC-6, AC-7, AC-11)
+  - [x] Genre rotation order (AC-2)
+  - [x] Counter, announcements and end states (AC-4, AC-8, AC-9)
+  - [x] Undo: toast and button (AC-5, AC-8)
+  - [x] Failure handling and concurrency (AC-7, AC-10)
+  - [x] Browser and accessibility pass (AC-11, AC-12)
+- [x] Verify it: `/check verify swipe onboarding`
+- [x] Test it: `/test swipe onboarding`
 
 ### 8. Taste profile & recommender · needs a decision
 Turn a user's ratings into a taste profile and rank movies for them, keeping the signals needed to explain each pick. Starts thin and gets thicker as later slices add input.

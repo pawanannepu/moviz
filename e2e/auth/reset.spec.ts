@@ -256,7 +256,7 @@ test.describe("a stranger signs up with someone else's address (AC-6, AC-7)", ()
     await expect(page).toHaveURL("/sign-in?notice=password-updated");
 
     await signInViaForm(page, email, ownerPassword);
-    await expect(page).toHaveURL("/home");
+    await expect(page).toHaveURL("/onboarding", { timeout: 20_000 });
 
     const strangerContext = await newDeviceContext(browser);
     const strangerPage = await strangerContext.newPage();

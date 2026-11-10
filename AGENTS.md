@@ -11,7 +11,7 @@ Source of truth: [docs/specs/0001-stack-architecture/index.md](docs/specs/0001-s
 - **Data**: Postgres on Neon with pgvector, Drizzle ORM over a `pg` Pool, Zod at every boundary
 - **Services**: Better Auth (email sign in), Resend (email), Voyage AI (embeddings), Vercel (hosting and cron)
 - **Package manager**: pnpm 10 (pinned in `packageManager`)
-- Built so far: the Next.js scaffold, the data layer (`src/db`, `src/auth`, `src/profile`, `src/ratings`, `src/user-data`) and the movie catalog (`src/catalog`, with a daily cron at `/api/cron/catalog`). The design system and UI foundation (`src/ui`, `design.md`, the landing page at `/` and the review page at `/design`). Email and the product screens arrive with the feature that needs them.
+- Built so far: the Next.js scaffold, the data layer (`src/db`, `src/auth`, `src/profile`, `src/ratings`, `src/user-data`) and the movie catalog (`src/catalog`, with a daily cron at `/api/cron/catalog`). The design system and UI foundation (`src/ui`, `design.md`, the landing page at `/` and the review page at `/design`). Email sign in (`src/auth`, `src/email`, the pages in `src/app/(auth)` and `src/app/(protected)`, and the route guard in `src/proxy.ts`). The product screens arrive with the feature that needs them.
 
 ## Build approach
 
@@ -32,6 +32,7 @@ pnpm test        # Vitest unit and integration (src/**/*.test.ts); database test
 pnpm test:watch  # Vitest in watch mode
 pnpm test:e2e    # Playwright end to end and axe accessibility scans (e2e/*.spec.ts)
 pnpm test:e2e:production # builds, starts with VERCEL_ENV=production on port 3100, checks /design is a 404
+pnpm exec playwright test -c playwright.auth.config.ts # email sign in specs (e2e/auth/), builds and starts on port 3101 with Turnstile test keys; skipped by pnpm test:e2e
 pnpm db:generate # drizzle-kit: write a migration from the schema change
 pnpm db:migrate  # apply migrations to the database in .env.local (check which branch first)
 pnpm catalog:seed    # load the TMDB catalog, resumable (--target <n>, --id <tmdbId>); needs TMDB_API_TOKEN
@@ -53,6 +54,7 @@ Stored in `docs/specs/`. Format: `docs/specs/NNNN-title/index.md`.
 - TypeScript stays `strict`: no `any`, exhaustive types. Document exported functions that other features call with a short doc comment.
 - Accessibility baseline is WCAG AA: keyboard, visible focus, labels, contrast. Swipe always has a button alternative.
 - Design system: build all UI to [design.md](design.md) (dark only, the Pit, Curtain, Screen, Dust, Subtitle, Exit and Edge palette, the three motion moments); token values live in `src/app/globals.css`, components in `src/ui/`.
+- Every route is closed to signed out visitors by default (`src/proxy.ts`). Open a public page by adding it to `src/auth/public-paths.ts`. The guard only looks for the cookie, so protected pages, Server Actions and Route Handlers still read the live session.
 - Schema changes go through Drizzle migrations only. All database code runs on the Node.js runtime.
 - Commit messages follow Conventional Commits, for example `feat(auth): add password reset`.
 
@@ -85,7 +87,8 @@ Pushes and PRs always ask first.
 - [neon-postgres](.claude/skills/neon-postgres/): `neondatabase/agent-skills`, Neon connections, branching, pgvector
 - [pnpm](.claude/skills/pnpm/): `antfu/skills`, pnpm commands and config
 - [better-auth-best-practices](.claude/skills/better-auth-best-practices/): `better-auth/skills`, Better Auth setup (move to `src/auth/AGENTS.md` when that area exists)
-- [resend](.claude/skills/resend/): `resend/resend-skills`, Resend email API (move to `src/email/AGENTS.md` when that area exists)
+- [email-and-password-best-practices](.claude/skills/email-and-password-best-practices/): `better-auth/skills`, Better Auth email and password, verification and reset flows (move to `src/auth/AGENTS.md` when that area exists)
+- [turnstile-spin](.claude/skills/turnstile-spin/): `cloudflare/skills`, Cloudflare Turnstile bot check setup (move to `src/auth/AGENTS.md` when that area exists)
 - [vitest](.claude/skills/vitest/): `antfu/skills`, Vitest unit and integration tests
 - [playwright-best-practices](.claude/skills/playwright-best-practices/): `currents-dev/playwright-best-practices-skill`, Playwright tests, including axe accessibility checks
 - [playwright-cli](.claude/skills/playwright-cli/): `microsoft/playwright-cli`, driving a real browser from the command line
@@ -96,6 +99,7 @@ MCP servers: Neon (recommended, connect it yourself, use read only mode on produ
 ## Context files
 
 - [src/catalog/AGENTS.md](src/catalog/AGENTS.md): TMDB sync, cron job, embeddings, title matching and the listable rule for the movie catalog
+- [src/email/AGENTS.md](src/email/AGENTS.md): sending email through Resend or the local console, the auth email templates and the never throw rule
 - [src/ui/AGENTS.md](src/ui/AGENTS.md): design tokens, primitives, movie and feed cards, the swipe card, page states, the landing hero and the `/design` page
 
 _Drafted by /audit from the repo, worth a quick human pass. Edit freely: once a line stops matching this draft, later runs treat it as curated and will flag rather than overwrite it._

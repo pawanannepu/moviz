@@ -53,15 +53,18 @@ test.describe("sign up, verify and sign out", () => {
       "sign up must not issue a session",
     ).toBeUndefined();
 
+    // A new person has not finished onboarding, so /home sends them to the deck (spec 0006, AC-1).
     await page.goto(mail.link as string);
-    await expect(page).toHaveURL("/home");
-    await expect(page.getByText(`You're signed in as ${email}.`)).toBeVisible();
+    await expect(page).toHaveURL("/onboarding", { timeout: 20_000 });
+    await expect(
+      page.getByRole("heading", { name: "What do you think of these?" }),
+    ).toBeVisible();
 
     await signOutViaButton(page);
     expect(await sessionCookie(page)).toBeUndefined();
 
     await signInViaForm(page, email);
-    await expect(page).toHaveURL("/home");
+    await expect(page).toHaveURL("/onboarding", { timeout: 20_000 });
   });
 
   test("a verification link used a second time shows Already verified (AC-2)", async ({
@@ -186,7 +189,7 @@ test.describe("an unverified person signing in (AC-3)", () => {
       ?.link as string;
 
     await page.goto(link);
-    await expect(page).toHaveURL("/home");
+    await expect(page).toHaveURL("/onboarding", { timeout: 20_000 });
     await page.context().clearCookies();
     await page.goto(link);
 
@@ -257,6 +260,10 @@ test.describe("signing in", () => {
     "/\\evil.com",
     "/sign-up",
     "%2F%2Fevil.com",
+    "/.//evil.com",
+    "/..//evil.com",
+    "/a/..//evil.com",
+    "%2F%2e%2F%2Fevil.com",
     "/api/auth/get-session",
   ]) {
     test(`returnTo=${unsafe} lands on home (AC-4)`, async ({ page }) => {

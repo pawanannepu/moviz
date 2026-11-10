@@ -142,3 +142,36 @@ export async function upsertProfile(
     throw error;
   }
 }
+
+/**
+ * Marks the user as onboarded (spec 0006, AC-7). `onboarded_at` goes from null
+ * to now once and is never cleared, so finishing again keeps the first time and
+ * still succeeds. Returns `user_not_found` when there is no profile row for the
+ * user (the account is gone).
+ */
+export async function markOnboarded(
+  db: Db,
+  input: { userId: string },
+): Promise<Result<{ onboardedAt: Date }, UserNotFound | DbUnavailable>> {
+  try {
+    const [row] = await db
+      .update(profiles)
+      .set({
+        onboardedAt: sql`coalesce(${profiles.onboardedAt}, now())`,
+        updatedAt: sql`case when ${profiles.onboardedAt} is null then now() else ${profiles.updatedAt} end`,
+      })
+      .where(eq(profiles.userId, input.userId))
+      .returning({ onboardedAt: profiles.onboardedAt });
+    if (!row?.onboardedAt) return err({ code: "user_not_found" });
+    return ok({ onboardedAt: row.onboardedAt });
+  } catch (error) {
+    const failure = toDbFailure(error);
+    if (
+      failure?.code === "user_not_found" ||
+      failure?.code === "db_unavailable"
+    ) {
+      return err(failure);
+    }
+    throw error;
+  }
+}

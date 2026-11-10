@@ -21,15 +21,15 @@ _Steps derived from spec 0005 acceptance criteria. `/check verify` runs these; `
 - [x] `curl -i -H "Cookie: better-auth.session_token=forged.value" http://localhost:3000/home` → 307 to `/sign-in` (page check rejects it); same cookie on `/sign-in` → 200 → AC-8
 - [x] `curl -i http://localhost:3000/tmdb-logo.svg` signed out → 200 (not guarded) → AC-8
 - [x] After sign in, the `sign_in` and `sign_out` log lines hold only event, outcome, time (and user id for sign in); no email, password, token or IP → AC-16
-- [ ] A signed in user's cookie `Expires` moves forward after `RenewSession` runs on a protected page older than 1 day → AC-4
+- [x] A signed in user's cookie `Expires` moves forward after `RenewSession` runs on a protected page older than 1 day → AC-4 _(2026-11-10: first run failed, the Server Component renewed the row before the client call, so no cookie was sent. Fixed by `disableRefresh` on the server reads in `src/auth/session.ts`. Rerun in Chromium: the first `get-session` carried `Set-Cookie`, cookie `Expires` moved from 12-08 to 12-10, database row renewed. Unit test `src/auth/session.test.ts`)_
 
 ## Value sourcing coverage (spec table)
-- [ ] `HOME_PATH` redirect after sign in: comes from `src/auth/paths.ts`; change it and confirm sign in, `/`, `/sign-in`, `/sign-up` all follow → AC-4, AC-9
-- [x] `returnTo`: query param only, passed through `safeReturnPath`, carried as a hidden field and checked again before navigating; try an encoded `%2F%2Fevil.com` and a value with a tab or newline → lands on `/home` or stays on this site → AC-4
+- [x] `HOME_PATH` redirect after sign in: comes from `src/auth/paths.ts`; change it and confirm sign in, `/`, `/sign-in`, `/sign-up` all follow → AC-4, AC-9 _(2026-11-10: ran a scratch copy with `HOME_PATH` set to `/design`; the real sign in form landed on `/design`, and `/`, `/sign-in`, `/sign-up`, `/forgot-password` all redirected to `/design`; no literal `"/home"` exists outside `paths.ts`)_
+- [x] `returnTo`: query param only, passed through `safeReturnPath`, carried as a hidden field and checked again before navigating; try an encoded `%2F%2Fevil.com` and a value with a tab or newline → lands on `/home` or stays on this site → AC-4 _(dot segment values such as `/.//evil.com` and `/..//evil.com` were found by the review and are now covered)_
 - [x] `?notice=` text: only the fixed map renders; try HTML in the value → nothing rendered → AC-10
 - [x] `requireUser` route: `/home` passes its own `HOME_PATH`; the redirect `returnTo` equals that route → AC-8
 - [x] Protected page user id and email: `/home` shows `session.user.email` from the live session, never from the URL or the client → AC-8
-- [ ] Rate limit wait seconds: from the `X-Retry-After` header on the 429; with no header the form shows 60 → AC-11
+- [x] Rate limit wait seconds: from the `X-Retry-After` header on the 429; with no header the form shows 60 → AC-11
 - [x] Resend 60 second wait: client countdown from the last send → AC-3
 
 ## Acceptance-criteria coverage
@@ -44,10 +44,10 @@ _Steps derived from spec 0005 acceptance criteria. `/check verify` runs these; `
 - [x] `/forgot-password`: enter a known email, then an unknown email → both show the same "Check your inbox" message ("If that email can be used…"); only the known one prints a reset link in the dev console → AC-6
 - [x] Open the reset link within 15 minutes → lands on `/reset-password` and the address bar no longer shows `?token=` after the page loads → AC-6
 - [x] Set a password under 8 characters → inline error tied to the field, focus moves to it; set a good one → lands on `/sign-in?notice=password-updated` and shows "Password updated. Sign in." → AC-6, AC-10
-- [ ] Open the same reset link a second time, and one older than 15 minutes (edit `verification.expires_at`) → "This link has expired or was already used" with an "Ask for a new link" link to `/forgot-password` → AC-6 _(reused link seen working; the older than 15 minutes half needs a database edit, still owed)_
+- [x] Open the same reset link a second time, and one older than 15 minutes (edit `verification.expires_at`) → "This link has expired or was already used" with an "Ask for a new link" link to `/forgot-password` → AC-6 _(2026-11-10: expiry set into the past in `verification`, the link redirected to `/reset-password?error=INVALID_TOKEN` and the page shows the expired message and the `/forgot-password` link)_
 - [x] Sign in on two browsers, reset the password in one → the other browser's session no longer opens `/home` → AC-6
 - [x] Sign up with an email, do not verify, then reset the password through the link → the reset signs the account in later without a verify step (email now verified) → AC-6
-- [ ] Sign up twice with the same new email → the second shows the same "Check your inbox" panel, no second `user` row; the console shows a reset email (account is unverified) → AC-7
+- [x] Sign up twice with the same new email → the second shows the same "Check your inbox" panel, no second `user` row; the console shows a reset email (account is unverified) → AC-7 _(2026-11-10: both calls 200 with the same body keys; the second returned a different made up id, the database holds one row, the console printed "Reset your Moviz password")_
 - [x] Verify an account, then sign up again with its email → same "Check your inbox" panel; the console shows an "You already have a Moviz account" email with sign in and forgot password links, and no token → AC-7
 - [x] Signed in, open `/forgot-password` → redirected to `/home`; `/reset-password` stays reachable → AC-9
 - [x] Both new forms at 320 px, keyboard only: labels, visible focus, pending state blocks double submit, error is announced, show password toggle works → AC-10
@@ -103,7 +103,7 @@ _Needs `TURNSTILE_SITE_KEY=1x00000000000000000000AA` and `TURNSTILE_SECRET_KEY=1
 - [x] Turnstile secret: read only in `src/auth/auth.ts` from `env.TURNSTILE_SECRET_KEY` → AC-11
 - [x] Allowed hostname: with `VERCEL_ENV=production` the plugin gets only the host of `BETTER_AUTH_URL`; unset on preview, local and CI (test keys report `example.com`) → AC-11
 - [x] Client IP for limits: default `x-forwarded-for`; two requests with different values count separately, and the e2e helper (`e2e/support/unique-ip.ts`) gives every test its own → AC-11
-- [ ] Seconds to wait: `X-Retry-After` on sign up, reset request, sign in and resend; with no header the forms show 60 → AC-11 _(all four seen showing the real header value; the "no header shows 60" fallback was not run)_
+- [x] Seconds to wait: `X-Retry-After` on sign up, reset request, sign in and resend; with no header the forms show 60 → AC-11 _(real header values seen on all four; the 60 fallback seen on all four by answering each call with a 429 that has no header)_
 
 ## Milestone 4 coverage
 - AC-10 (Turnstile reset, forms) by the widget, reset and 320 px steps · AC-11 by the captcha, rate limit, trusted IP and wait seconds steps · AC-13 by the delete user steps · AC-14 by the boot check step · AC-15 by the cookie and origin steps · AC-16 (account deleted) by the delete log step.

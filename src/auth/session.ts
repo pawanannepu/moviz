@@ -10,13 +10,25 @@ export type AuthSession = NonNullable<
 >;
 
 /**
+ * Server side reads never renew the session. A Server Component or a Route
+ * Handler can extend the database row but cannot write the cookie, and once
+ * the row is fresh the browser's own `get-session` call (`RenewSession`) finds
+ * nothing due and sends no new cookie, so the cookie would die 30 days after
+ * sign in however often the person visits (spec 0005, AC-4).
+ */
+const READ_ONLY_SESSION = { disableRefresh: true } as const;
+
+/**
  * Reads the live session from the database, or null when there is none. A
  * cookie that no longer maps to a live session counts as signed out. Use it in
  * pages that only branch on sign in (`/`, the auth pages). Cached for one
  * request, so several components can ask without extra reads.
  */
 export const getSession = cache(async (): Promise<AuthSession | null> => {
-  return auth.api.getSession({ headers: await headers() });
+  return auth.api.getSession({
+    headers: await headers(),
+    query: READ_ONLY_SESSION,
+  });
 });
 
 /** What `getUserForAction` returns: the user, or a typed "not signed in". */
@@ -32,7 +44,10 @@ export type ActionUserResult =
  * the client (spec 0005, AC-8).
  */
 export async function getUserForAction(): Promise<ActionUserResult> {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await auth.api.getSession({
+    headers: await headers(),
+    query: READ_ONLY_SESSION,
+  });
   if (!session) return { ok: false, error: "unauthenticated" };
   return { ok: true, user: session.user };
 }

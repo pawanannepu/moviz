@@ -201,3 +201,63 @@ describe("SwipeDeck after a decision (AC-12)", () => {
     expect(screen.queryByRole("group")).toBeNull();
   });
 });
+
+describe("SwipeDeck onAnnounce (spec 0006, AC-4, AC-12)", () => {
+  it("hands the announcement to the screen and renders no live region of its own", () => {
+    const onAnnounce = vi.fn();
+    render(
+      <SwipeDeck movie={heat} onDecide={vi.fn()} onAnnounce={onAnnounce} />,
+    );
+
+    expect(screen.queryByRole("status")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Like" }));
+
+    expect(onAnnounce).toHaveBeenCalledTimes(1);
+    expect(onAnnounce).toHaveBeenCalledWith("Liked Heat");
+  });
+
+  it("keeps its own live region when no onAnnounce is given", () => {
+    render(<SwipeDeck movie={heat} onDecide={vi.fn()} />);
+
+    expect(screen.getByRole("status")).toBeTruthy();
+  });
+});
+
+describe("SwipeDeck initialFocus (spec 0006, AC-12)", () => {
+  it("puts focus on the first card when asked to, as after an undo", () => {
+    render(<SwipeDeck movie={heat} onDecide={vi.fn()} initialFocus="card" />);
+
+    expect(document.activeElement).toBe(screen.getByRole("group"));
+  });
+
+  it("puts focus on a named button when asked to", () => {
+    render(<SwipeDeck movie={heat} onDecide={vi.fn()} initialFocus="liked" />);
+
+    expect(document.activeElement).toBe(
+      screen.getByRole("button", { name: "Like" }),
+    );
+  });
+
+  it("leaves focus alone when no initial focus is given", () => {
+    render(<SwipeDeck movie={heat} onDecide={vi.fn()} />);
+
+    expect(document.activeElement).toBe(document.body);
+  });
+
+  it("applies only to the first card: the next card follows the last decision", () => {
+    const view = render(
+      <SwipeDeck movie={heat} onDecide={vi.fn()} initialFocus="card" />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Not seen" }));
+    view.rerender(
+      <SwipeDeck movie={collateral} onDecide={vi.fn()} initialFocus="card" />,
+    );
+    act(() => vi.advanceTimersByTime(EXIT_MS));
+
+    expect(document.activeElement).toBe(
+      screen.getByRole("button", { name: "Not seen" }),
+    );
+  });
+});

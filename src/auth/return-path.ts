@@ -50,5 +50,10 @@ export function safeReturnPath(raw: string | null | undefined): string {
   if (AUTH_PAGES.includes(path)) return HOME_PATH;
   if (path === "/api" || path.startsWith("/api/")) return HOME_PATH;
 
-  return `${parsed.pathname}${parsed.search}`;
+  // The parser removes dot segments, so `/.//evil.com` becomes `//evil.com`
+  // only now. Judge what is returned, not what came in: a browser reads a
+  // leading `//` as another site.
+  const safe = `${parsed.pathname}${parsed.search}`;
+  if (safe.startsWith("//")) return HOME_PATH;
+  return safe;
 }
