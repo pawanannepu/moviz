@@ -20,7 +20,7 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 5 | Design system & UI foundation | Foundation | done |
 | 6 | Email sign in | Slice 1 | done |
 | 7 | Swipe onboarding | Slice 1 | done |
-| 8 | Taste profile & recommender | Slice 1 | planned |
+| 8 | Taste profile & recommender | Slice 1 | in-progress |
 | 9 | Personalized feed with reasons | Slice 1 | planned |
 | 10 | Product analytics & error monitoring | Slice 2 | planned |
 | 11 | Letterboxd CSV import | Slice 3 | planned |
@@ -125,10 +125,19 @@ spec [0006](../specs/0006-swipe-onboarding/index.md) · code in `src/onboarding/
 - [x] Verify it: `/check verify swipe onboarding`
 - [x] Test it: `/test swipe onboarding`
 
-### 8. Taste profile & recommender · needs a decision
+### 8. Taste profile & recommender
 Turn a user's ratings into a taste profile and rank movies for them, keeping the signals needed to explain each pick. Starts thin and gets thicker as later slices add input.
 **Done when:** given a user's ratings, it returns a ranked list that excludes movies they have rated, and each result carries the reasons it was ranked.
-- [ ] Design it (spec): `/architect taste profile & recommender`
+spec [0007](../specs/0007-taste-profile-recommender/index.md) · code in `src/recommend/`
+- [x] Design it (spec): `/architect taste profile & recommender`
+- [x] Build it: `/develop taste profile & recommender`
+  - [x] Thread: anchors, scoring query and ranked picks with reasons (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-13, AC-14, AC-19)
+  - [x] Strength, taste summary and the popular fallback (AC-7, AC-8, AC-9, AC-18)
+  - [x] Popularity nudge and variety cap (AC-10, AC-11)
+  - [x] Paging and input checks (AC-12, AC-15)
+  - [x] Failure handling, privacy and cost check (AC-15, AC-16, AC-17, AC-19)
+- [x] Verify it: `/check verify taste profile & recommender`
+- [x] Test it: `/test taste profile & recommender`
 
 ### 9. Personalized feed with reasons · needs a decision
 The home screen: a scrollable feed of recommended movies, each with a short human readable reason such as "because you rated Heat highly".
