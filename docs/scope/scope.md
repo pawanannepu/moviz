@@ -23,7 +23,7 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 8 | Taste profile & recommender | Slice 1 | done |
 | 9 | Personalized feed with reasons | Slice 1 | done |
 | 10 | Product analytics & error monitoring | Slice 2 | dropped |
-| 11 | Letterboxd CSV import | Slice 3 | planned |
+| 11 | Letterboxd CSV import | Slice 3 | in-progress |
 | 12 | Movie detail page | Slice 4 | planned |
 | 13 | Watchlist & seen list | Slice 5 | planned |
 | 14 | Feed feedback | Slice 6 | planned |
@@ -162,10 +162,19 @@ See signups, onboarding completion, import success, and crashes, so you can tell
 
 ## Slice 3: Letterboxd import
 
-### 11. Letterboxd CSV import · needs a decision
+### 11. Letterboxd CSV import
 Upload a Letterboxd ratings CSV, match each row to the catalog, and fold the ratings into the taste profile.
 **Done when:** a user can upload a Letterboxd export, sees how many rows matched and which did not, the matched ratings change their feed, and a bad or empty file gives a clear error.
-- [ ] Design it (spec): `/architect letterboxd csv import`
+spec [0009](../specs/0009-letterboxd-csv-import/index.md) · code in `src/import/`, `src/app/api/import/`, `src/app/(protected)/import/`, `src/ui/count-tile.tsx`, `src/ui/file-field.tsx`
+- [x] Design it (spec): `/architect letterboxd csv import`
+- [x] Build it: `/develop letterboxd csv import`
+  - [x] Thread: migration, parser, row rules, match, save and a bare `/import` page (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6)
+  - [x] Safety: origin check, daily cap, failed record, per user lock and time budget (AC-7, AC-9, AC-12, AC-17)
+  - [x] Onboarding rule, keep 5 pruning, export and delete (AC-8, AC-10, AC-13)
+  - [x] Not matched list with Load more, and the entry links (AC-11, AC-15)
+  - [x] Full page states, accessibility and the 20,000 row limits check (AC-14, AC-16)
+- [ ] Verify it: `/check verify letterboxd csv import`
+- [ ] Test it: `/test letterboxd csv import`
 
 ## Slice 4: Movie detail
 
@@ -221,6 +230,7 @@ Out of scope for this build pass, kept so the plan stays honest.
 - **Paid plans**: free and paid tiers · needs a decision · GA
 - **Native mobile app**: swipe as a native app · needs a decision
 - **Other languages**: translated interface · needs a decision
+- **Letterboxd import extras**: download unmatched rows as a CSV, undo an import, accept the full export zip, import watched and watchlist files, a progress bar for large files · needs a decision · from spec 0009
 
 ## Legend
 

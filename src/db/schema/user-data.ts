@@ -4,6 +4,7 @@ import {
   char,
   check,
   index,
+  integer,
   pgEnum,
   pgTable,
   primaryKey,
@@ -90,4 +91,78 @@ export const swipeSkips = pgTable(
     skippedAt: timestamptz("skipped_at").defaultNow().notNull(),
   },
   (t) => [primaryKey({ columns: [t.userId, t.movieId] })],
+);
+
+export const importStatus = pgEnum("import_status", ["completed", "failed"]);
+
+/** Why a row of a Letterboxd file did not become a rating (spec 0009). */
+export const importUnmatchedReason = pgEnum("import_unmatched_reason", [
+  "no_match",
+  "ambiguous",
+  "invalid_row",
+  "duplicate",
+  "kept_manual",
+]);
+
+/**
+ * One saved Letterboxd import (spec 0009). A row is written once, as `completed`
+ * inside the transaction that saves the ratings, or as `failed` after that
+ * transaction rolled back. A user keeps their latest five.
+ */
+export const imports = pgTable(
+  "imports",
+  {
+    id: bigint("id", { mode: "number" })
+      .primaryKey()
+      .generatedAlwaysAsIdentity(),
+    userId: userId(),
+    status: importStatus("status").notNull(),
+    rowsTotal: integer("rows_total").notNull(),
+    rowsMatched: integer("rows_matched").notNull(),
+    rowsUnmatched: integer("rows_unmatched").notNull(),
+    createdAt: timestamptz("created_at").defaultNow().notNull(),
+    completedAt: timestamptz("completed_at"),
+  },
+  (t) => [
+    check(
+      "imports_counts_check",
+      sql`${t.rowsTotal} >= 0 and ${t.rowsMatched} >= 0 and ${t.rowsUnmatched} >= 0`,
+    ),
+    check(
+      "imports_completed_counts_check",
+      sql`${t.status} <> 'completed' or ${t.rowsMatched} + ${t.rowsUnmatched} = ${t.rowsTotal}`,
+    ),
+    // Nulls first so a plain `ORDER BY ... DESC` (which is nulls first) can use it.
+    index("imports_user_created_idx").on(
+      t.userId,
+      t.createdAt.desc().nullsFirst(),
+      t.id.desc().nullsFirst(),
+    ),
+  ],
+);
+
+/** The rows of an import that did not become a rating. Reaches the user through `imports`. */
+export const importUnmatchedRows = pgTable(
+  "import_unmatched_rows",
+  {
+    importId: bigint("import_id", { mode: "number" })
+      .notNull()
+      .references(() => imports.id, { onDelete: "cascade" }),
+    /** The data row's position in the file; the first data row is 1. */
+    rowNumber: integer("row_number").notNull(),
+    /** Cut to 200 characters; an empty string for a row with a blank title. */
+    title: text("title").notNull(),
+    year: smallint("year"),
+    /** Letterboxd stars times 2, or null when the row had no valid rating. */
+    score: smallint("score"),
+    reason: importUnmatchedReason("reason").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.importId, t.rowNumber] }),
+    check("import_unmatched_rows_row_number_check", sql`${t.rowNumber} >= 1`),
+    check(
+      "import_unmatched_rows_score_check",
+      sql`${t.score} is null or ${t.score} between 1 and 10`,
+    ),
+  ],
 );

@@ -1,5 +1,5 @@
 import { and, eq, sql } from "drizzle-orm";
-import { lockUserMovie } from "@/db/advisory-lock";
+import { lockUserImportShared, lockUserMovie } from "@/db/advisory-lock";
 import type { Db } from "@/db/create-db";
 import {
   type DbFailure,
@@ -44,6 +44,8 @@ export async function saveRating(
   }
   try {
     const saved = await db.transaction(async (tx) => {
+      // Shared import lock first, then the movie lock (spec 0009, AC-17).
+      await lockUserImportShared(tx, userId);
       await lockUserMovie(tx, userId, movieId);
       const [row] = await tx
         .insert(ratings)

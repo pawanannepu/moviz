@@ -5,6 +5,7 @@ import { SignOutButton } from "@/auth/forms/sign-out-button";
 import { HOME_PATH, ONBOARDING_PATH, SIGN_IN_PATH } from "@/auth/paths";
 import { requireUser } from "@/auth/session";
 import { db } from "@/db/client";
+import { ImportLink } from "@/import/import-link";
 import { loadDeck } from "@/onboarding/load-deck";
 import { OnboardingDeck } from "@/onboarding/onboarding-deck";
 import { getProfile } from "@/profile/profile";
@@ -16,8 +17,8 @@ export const metadata: Metadata = {
 
 /**
  * The first run swipe deck (spec 0006). A user who has already finished goes to
- * `/home`. The header shows the wordmark and sign out only, because a link to
- * `/home` would send the user straight back here.
+ * `/home`. The header shows the wordmark, the Import link and sign out, and no link to
+ * `/home`, because that would send the user straight back here.
  */
 export default async function OnboardingPage() {
   const { user } = await requireUser(ONBOARDING_PATH);
@@ -39,7 +40,10 @@ export default async function OnboardingPage() {
         <Link href="/" className="type-brand inline-flex min-h-11 items-center">
           Moviz
         </Link>
-        <SignOutButton />
+        <div className="flex flex-wrap items-center gap-x-6">
+          <ImportLink label="Import from Letterboxd" />
+          <SignOutButton />
+        </div>
       </header>
       <OnboardingDeck cards={cards} rated={rated} shown={shown} />
     </>

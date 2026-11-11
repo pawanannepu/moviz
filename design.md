@@ -128,6 +128,8 @@ Everything lives in `src/ui/`. shadcn output is in `src/ui/primitives/` and was 
 ### Shared pieces (`src/ui/`)
 
 - **Field** (`field.tsx`): label, input, optional hint and error. Generates ids, lists the hint then the error in `aria-describedby`, and sets `aria-invalid` while there is an error.
+- **FileField** (`file-field.tsx`): a `Field` with `type="file"`. The native "Choose file" button is restyled to the tokens, and the label, hint and error are linked the same way.
+- **CountTile** (`count-tile.tsx`): one number with its name on a Curtain surface. `CountTiles` wraps three of them in a description list. The Letterboxd import uses them for rows read, matched and not matched.
 - **SkipLink** (`skip-link.tsx`): hidden until focused.
 - **SiteHeader** and **NavLinks** (`site-header.tsx`, `nav-links.tsx`): the wordmark as a link home, then a navigation list. `NavLinks` is a small client component that marks the current page with `aria-current="page"`. Route group layouts render it; `/` does not.
 - **SubtitleBar** (`subtitle-bar.tsx`): a reason set as a subtitle at the bottom of a poster frame.

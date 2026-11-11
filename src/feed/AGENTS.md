@@ -4,17 +4,17 @@ The personalized feed on `/home`: up to 24 picks from the taste recommender, eac
 
 ## Key files
 
-| File | Owns |
-| --- | --- |
-| `constants.ts` | `FEED_BATCH_SIZE` (24) and the fixed copy: title, loading label, early picks lines, empty and error text, the noscript line, `morePicksLoaded(count)` |
-| `reason-sentence.ts` | Pure `reasonSentence(reason)`: "Because you loved Heat (1995)". The verb comes from `anchor.score` (9 to 10 loved, 7 to 8 liked, 6 rated). No year and no parentheses when the year is null. "Popular with film fans" for `popular`. No full stop |
-| `load-feed-batch.ts` | `loadFeedBatch(db, { userId, shown })`: exactly one `recommendMovies` call, maps each pick to `{ movie, reason }`, sets `done` |
-| `feed.tsx` | The async server component behind the Suspense boundary: early picks line, empty state, in page error, or the list |
-| `feed-list.tsx` | The one client list: picks, Load more state, dedupe by movie id, the live region announcement |
-| `feed-load-error.tsx` | The in page first load error. Try again calls `router.refresh()` inside a transition |
-| `feed-header.tsx` | Wordmark link and Sign out, shared by the page and `home/error.tsx` |
-| `actions.ts` | `loadMoreAction`, the only Server Action |
-| `types.ts` | `FeedPick`, `FeedBatch` |
+| File                  | Owns                                                                                                                                                                                                                                              |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `constants.ts`        | `FEED_BATCH_SIZE` (24) and the fixed copy: title, loading label, early picks lines, empty and error text, the noscript line, `morePicksLoaded(count)`                                                                                             |
+| `reason-sentence.ts`  | Pure `reasonSentence(reason)`: "Because you loved Heat (1995)". The verb comes from `anchor.score` (9 to 10 loved, 7 to 8 liked, 6 rated). No year and no parentheses when the year is null. "Popular with film fans" for `popular`. No full stop |
+| `load-feed-batch.ts`  | `loadFeedBatch(db, { userId, shown })`: exactly one `recommendMovies` call, maps each pick to `{ movie, reason }`, sets `done`                                                                                                                    |
+| `feed.tsx`            | The async server component behind the Suspense boundary: early picks line, empty state, in page error, or the list                                                                                                                                |
+| `feed-list.tsx`       | The one client list: picks, Load more state, dedupe by movie id, the live region announcement                                                                                                                                                     |
+| `feed-load-error.tsx` | The in page first load error. Try again calls `router.refresh()` inside a transition                                                                                                                                                              |
+| `feed-header.tsx`     | Wordmark link and Sign out, shared by the page and `home/error.tsx`                                                                                                                                                                               |
+| `actions.ts`          | `loadMoreAction`, the only Server Action                                                                                                                                                                                                          |
+| `types.ts`            | `FeedPick`, `FeedBatch`                                                                                                                                                                                                                           |
 
 The page is `src/app/(protected)/home/page.tsx` (guards, header, `h1`, a `noscript` line, a Suspense boundary) and `home/error.tsx` (the page level error). The bar under the grid is `src/ui/load-more-bar.tsx`.
 

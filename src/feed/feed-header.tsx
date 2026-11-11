@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { SignOutButton } from "@/auth/forms/sign-out-button";
+import { ImportLink } from "@/import/import-link";
 
 /**
- * The feed's header: the wordmark linking to `/` and Sign out. The same shape
+ * The feed's header: the wordmark linking to `/`, the Import link and Sign out. The same shape
  * as the onboarding header. `home/page.tsx` and `home/error.tsx` both use it,
  * because the error page replaces the whole page.
  */
@@ -12,7 +13,10 @@ export function FeedHeader() {
       <Link href="/" className="type-brand inline-flex min-h-11 items-center">
         Moviz
       </Link>
-      <SignOutButton />
+      <div className="flex flex-wrap items-center gap-x-6">
+        <ImportLink />
+        <SignOutButton />
+      </div>
     </header>
   );
 }

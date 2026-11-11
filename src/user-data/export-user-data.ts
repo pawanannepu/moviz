@@ -1,11 +1,19 @@
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, inArray } from "drizzle-orm";
 import type { Db } from "@/db/create-db";
 import {
   type DbUnavailable,
   toDbFailure,
   type UserNotFound,
 } from "@/db/failure";
-import { movies, profiles, ratings, swipeSkips, user } from "@/db/schema";
+import {
+  imports,
+  importUnmatchedRows,
+  movies,
+  profiles,
+  ratings,
+  swipeSkips,
+  user,
+} from "@/db/schema";
 import { err, ok, type Result } from "@/lib/result";
 
 /**
@@ -49,6 +57,29 @@ export type UserExport = {
     title: string;
     year: number | null;
     skippedAt: string;
+  }[];
+  /** Saved Letterboxd imports, newest first, each with the rows that did not become ratings (spec 0009). */
+  imports: {
+    id: number;
+    status: "completed" | "failed";
+    rowsTotal: number;
+    rowsMatched: number;
+    rowsUnmatched: number;
+    createdAt: string;
+    completedAt: string | null;
+    unmatched: {
+      rowNumber: number;
+      title: string;
+      year: number | null;
+      /** Half stars, 0.5 to 5 (the stored score divided by 2), or null. */
+      stars: number | null;
+      reason:
+        | "no_match"
+        | "ambiguous"
+        | "invalid_row"
+        | "duplicate"
+        | "kept_manual";
+    }[];
   }[];
 };
 
@@ -113,6 +144,28 @@ export async function exportUserData(
           .where(eq(swipeSkips.userId, userId))
           .orderBy(desc(swipeSkips.skippedAt), desc(swipeSkips.movieId));
 
+        const importRows = await tx
+          .select()
+          .from(imports)
+          .where(eq(imports.userId, userId))
+          .orderBy(desc(imports.createdAt), desc(imports.id));
+        const unmatchedRows =
+          importRows.length === 0
+            ? []
+            : await tx
+                .select()
+                .from(importUnmatchedRows)
+                .where(
+                  inArray(
+                    importUnmatchedRows.importId,
+                    importRows.map((row) => row.id),
+                  ),
+                )
+                .orderBy(
+                  importUnmatchedRows.importId,
+                  importUnmatchedRows.rowNumber,
+                );
+
         const document: UserExport = {
           schemaVersion: 1,
           exportedAt: iso(new Date()),
@@ -149,6 +202,24 @@ export async function exportUserData(
             title: row.title,
             year: row.year,
             skippedAt: iso(row.skippedAt),
+          })),
+          imports: importRows.map((row) => ({
+            id: row.id,
+            status: row.status,
+            rowsTotal: row.rowsTotal,
+            rowsMatched: row.rowsMatched,
+            rowsUnmatched: row.rowsUnmatched,
+            createdAt: iso(row.createdAt),
+            completedAt: row.completedAt && iso(row.completedAt),
+            unmatched: unmatchedRows
+              .filter((unmatched) => unmatched.importId === row.id)
+              .map((unmatched) => ({
+                rowNumber: unmatched.rowNumber,
+                title: unmatched.title,
+                year: unmatched.year,
+                stars: unmatched.score === null ? null : unmatched.score / 2,
+                reason: unmatched.reason,
+              })),
           })),
         };
         return document;

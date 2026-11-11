@@ -2,6 +2,8 @@ import { eq, sql } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import {
   account,
+  imports,
+  importUnmatchedRows,
   movies,
   profiles,
   ratings,
@@ -39,6 +41,25 @@ describe.skipIf(!TEST_DATABASE_URL)("deleteAccount (database)", () => {
       country: "GB",
       countrySource: "user",
       termsVersion: "v1",
+    });
+    const [saved] = await t.db
+      .insert(imports)
+      .values({
+        userId,
+        status: "completed",
+        rowsTotal: 1,
+        rowsMatched: 0,
+        rowsUnmatched: 1,
+        completedAt: new Date(),
+      })
+      .returning({ id: imports.id });
+    await t.db.insert(importUnmatchedRows).values({
+      importId: saved.id,
+      rowNumber: 1,
+      title: "Somewhere",
+      year: 1999,
+      score: 8,
+      reason: "no_match",
     });
     await t.db.insert(account).values({
       id: `acct-${token()}`,

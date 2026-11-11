@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { lockUserMovie } from "@/db/advisory-lock";
+import { lockUserImportShared, lockUserMovie } from "@/db/advisory-lock";
 import type { Db } from "@/db/create-db";
 import {
   type DbUnavailable,
@@ -48,6 +48,7 @@ export async function saveSwipe(
 
   try {
     await db.transaction(async (tx) => {
+      await lockUserImportShared(tx, userId);
       await lockUserMovie(tx, userId, movieId);
       await tx.execute(sql`
         insert into swipe_skips (user_id, movie_id)

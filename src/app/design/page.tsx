@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { ErrorStateDemo } from "@/ui/design/error-state-demo";
+import { ImportDemo } from "@/ui/design/import-demo";
 import { isDesignPageHidden } from "@/ui/design/is-design-page-hidden";
 import { LoadMoreDemo } from "@/ui/design/load-more-demo";
 import { SwipeDemo } from "@/ui/design/swipe-demo";
@@ -347,6 +348,14 @@ export default async function DesignPage() {
         note="Under the feed grid. One button covers ready, loading and failed. A lost session shows a sign in link, and the end of the feed shows a line."
       >
         <LoadMoreDemo />
+      </Section>
+
+      <Section
+        id="import"
+        title="Letterboxd import"
+        note="The file field, the count tiles, the upload form in every state, and the latest result. Nothing is sent from this page."
+      >
+        <ImportDemo />
       </Section>
 
       <Section

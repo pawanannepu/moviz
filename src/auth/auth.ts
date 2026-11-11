@@ -50,8 +50,12 @@ function isLocalHost(host: string): boolean {
   return host === "localhost" || host.startsWith("localhost:");
 }
 
-/** The exact origins Better Auth's origin check accepts. */
-function trustedOrigins(): string[] {
+/**
+ * The exact origins Better Auth's origin check accepts. Route Handlers outside
+ * Better Auth, such as the Letterboxd import, compare a request's `Origin`
+ * header against this same list (spec 0009, AC-12).
+ */
+export function trustedOrigins(): string[] {
   return allowedHosts().map(
     (host) => `${isLocalHost(host) ? "http" : "https"}://${host}`,
   );

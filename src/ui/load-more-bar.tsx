@@ -12,26 +12,35 @@ export type LoadMoreState =
   | "session_ended"
   | "done";
 
+/** The words the bar shows. The defaults are the feed's; another list passes its own. */
+export type LoadMoreCopy = {
+  labels: { idle: string; pending: string; error: string };
+  messages: { error: string; session_ended: string };
+  doneLine: string;
+};
+
 type LoadMoreBarProps = {
   state: LoadMoreState;
   /** Called by the one button in `idle` and `error`. Ignored while `pending`. */
   onLoadMore: () => void;
   /** The sign in address for `session_ended`. */
   signInHref: string;
+  /** Words for a list that is not the feed. Left out, the feed's words are used. */
+  copy?: LoadMoreCopy;
 };
 
-const LABELS = {
-  idle: "Load more picks",
-  pending: "Loading more picks",
-  error: "Try again",
-} as const;
-
-const MESSAGES = {
-  error: "We couldn't load more picks. Check your connection and try again.",
-  session_ended: "Your session ended. Sign in to see more picks.",
-} as const;
-
-const DONE_LINE = "That's all for now.";
+const DEFAULT_COPY: LoadMoreCopy = {
+  labels: {
+    idle: "Load more picks",
+    pending: "Loading more picks",
+    error: "Try again",
+  },
+  messages: {
+    error: "We couldn't load more picks. Check your connection and try again.",
+    session_ended: "Your session ended. Sign in to see more picks.",
+  },
+  doneLine: "That's all for now.",
+};
 
 /**
  * The bar under a feed grid (spec 0008, AC-8 to AC-10). One button covers
@@ -47,6 +56,7 @@ export function LoadMoreBar({
   state,
   onLoadMore,
   signInHref,
+  copy = DEFAULT_COPY,
 }: LoadMoreBarProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const linkRef = useRef<HTMLAnchorElement>(null);
@@ -63,7 +73,7 @@ export function LoadMoreBar({
   }, [state]);
 
   const message =
-    state === "error" || state === "session_ended" ? MESSAGES[state] : "";
+    state === "error" || state === "session_ended" ? copy.messages[state] : "";
 
   return (
     <div
@@ -76,7 +86,7 @@ export function LoadMoreBar({
       </p>
       {state === "done" ? (
         <p ref={doneRef} tabIndex={-1} className="text-muted-foreground">
-          {DONE_LINE}
+          {copy.doneLine}
         </p>
       ) : state === "session_ended" ? (
         <Button asChild>
@@ -96,7 +106,7 @@ export function LoadMoreBar({
           }}
           className="aria-disabled:cursor-default aria-disabled:opacity-50"
         >
-          {LABELS[state]}
+          {copy.labels[state]}
         </Button>
       )}
     </div>

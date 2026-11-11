@@ -1,5 +1,5 @@
 import { and, eq } from "drizzle-orm";
-import { lockUserMovie } from "@/db/advisory-lock";
+import { lockUserImportShared, lockUserMovie } from "@/db/advisory-lock";
 import type { Db } from "@/db/create-db";
 import { type DbFailure, toDbFailure } from "@/db/failure";
 import { ratings, swipeSkips } from "@/db/schema";
@@ -27,6 +27,7 @@ export async function undoSwipe(
   const { userId, movieId, choice } = input;
   try {
     const restored = await db.transaction(async (tx) => {
+      await lockUserImportShared(tx, userId);
       await lockUserMovie(tx, userId, movieId);
       if (choice === "not_seen") {
         const removed = await tx
