@@ -22,20 +22,29 @@ export type MovieCardProps = {
   href?: string;
   /** Poster size. `w342` by default; the feed, swipe card and hero use `w500`. */
   posterSize?: PosterSize;
+  /**
+   * Runs when the link starts a navigation inside the app, and not when the
+   * card opens in a new tab. Passed to the `next/link` prop of the same name,
+   * so only a client component can set it.
+   */
+  onNavigate?: () => void;
 };
 
 /**
  * A movie as a poster frame, then its title and a small meta line. The poster
  * is the card: there is no box around it. DOM order is poster, reason, title,
  * meta. With `href`, the title is the link and the whole card is clickable
- * (spec 0004, AC-8). It has no server only imports, so it renders on the
- * server or inside a client component such as the feed list (spec 0008).
+ * (spec 0004, AC-8). The link never prefetches: a feed holds hundreds of
+ * cards, and most are never opened (spec 0010, AC-12). It has no server only
+ * imports, so it renders on the server or inside a client component such as
+ * the feed list (spec 0008).
  */
 export function MovieCard({
   movie,
   reason,
   href,
   posterSize = "w342",
+  onNavigate,
 }: MovieCardProps) {
   const { width, height } = POSTER_DIMENSIONS[posterSize];
   const meta = movieMeta(movie);
@@ -60,6 +69,8 @@ export function MovieCard({
           {href ? (
             <Link
               href={href}
+              prefetch={false}
+              onNavigate={onNavigate}
               className="outline-none after:absolute after:inset-0"
             >
               {movie.title}

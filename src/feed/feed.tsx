@@ -34,7 +34,7 @@ export async function Feed({ userId }: { userId: string }) {
           {line}
         </p>
       ) : null}
-      <FeedList initialPicks={picks} initialDone={done} />
+      <FeedList userId={userId} initialPicks={picks} initialDone={done} />
     </>
   );
 }

@@ -67,6 +67,9 @@ export function ImportResult({
         </p>
       ) : (
         <UnmatchedList
+          // The list keeps its rows and cursor in state. A new import on the same
+          // page (upload without a reload) must start a new list, not reuse the old.
+          key={latest.id}
           importId={latest.id}
           total={latest.rowsUnmatched}
           initial={latest.firstPage}

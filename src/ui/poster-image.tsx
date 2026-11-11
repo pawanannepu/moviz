@@ -51,7 +51,7 @@ export function PosterImage({
           className,
         )}
       >
-        <span className="type-section wrap-break-word">{title}</span>
+        <span className="type-section min-w-0 wrap-break-word">{title}</span>
       </div>
     );
   }

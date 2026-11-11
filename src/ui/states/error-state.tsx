@@ -8,6 +8,11 @@ type ErrorStateProps = {
   body: string;
   /** Called when the person presses "Try again". */
   onRetry: () => void;
+  /**
+   * The heading level of the title. `h2` by default. A page whose only
+   * heading is this error passes `h1`, so the page still has one.
+   */
+  titleAs?: "h1" | "h2";
 };
 
 /**
@@ -15,7 +20,12 @@ type ErrorStateProps = {
  * apology, and offers one button to try again (spec 0004, AC-14). A client
  * component, so its callers are client components or an `error.tsx`.
  */
-export function ErrorState({ title, body, onRetry }: ErrorStateProps) {
+export function ErrorState({
+  title,
+  body,
+  onRetry,
+  titleAs: Title = "h2",
+}: ErrorStateProps) {
   return (
     <section
       role="alert"
@@ -23,7 +33,7 @@ export function ErrorState({ title, body, onRetry }: ErrorStateProps) {
       className="flex flex-col items-start gap-4 rounded-sheet bg-card p-8"
     >
       <TriangleAlert aria-hidden="true" className="size-6 text-destructive" />
-      <h2 className="type-section">{title}</h2>
+      <Title className="type-section">{title}</Title>
       <p className="max-w-[62ch] text-muted-foreground">{body}</p>
       <Button variant="secondary" onClick={onRetry}>
         Try again

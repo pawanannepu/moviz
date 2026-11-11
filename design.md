@@ -77,6 +77,7 @@ Rules: sentence case everywhere, no all caps, no small labels above headings, no
 - **Shape**: posters and the subtitle bar have a 2px radius (`rounded-poster`, a film frame). Buttons and inputs have 6px (`rounded-control`). Toasts and panels have 10px (`rounded-sheet`).
 - **Depth** comes from surface color. There are no shadows, except the drag glow.
 - **Feed grid**: the `feed-grid` utility, `repeat(auto-fill, minmax(min(100%, 260px), 1fr))`, 32px between rows and 24px between columns. On one column an item is at most 420px wide.
+- **Detail grid**: the `detail-grid` utility, for the movie detail page. One column with 32px between the poster and the text, and a poster at most 420px wide. From 1024px, two columns with 48px between them: the poster on the left at 40% of the row up to 420px, the text on the right.
 
 ## Motion
 
@@ -134,14 +135,24 @@ Everything lives in `src/ui/`. shadcn output is in `src/ui/primitives/` and was 
 - **SiteHeader** and **NavLinks** (`site-header.tsx`, `nav-links.tsx`): the wordmark as a link home, then a navigation list. `NavLinks` is a small client component that marks the current page with `aria-current="page"`. Route group layouts render it; `/` does not.
 - **SubtitleBar** (`subtitle-bar.tsx`): a reason set as a subtitle at the bottom of a poster frame.
 - **PosterImage** (`poster-image.tsx`): a 2:3 poster through `next/image` with `unoptimized` (posters are hotlinked from TMDB). When the poster is missing or fails to load, even before the page loaded, it shows a Curtain frame with the title in Archivo at the top, so a reason bar never covers it.
-- **MovieCard** (`movie-card.tsx`): poster, then reason, title and a meta line like "1995, Action, Crime". No box around it. With `href`, the title is the link and the whole card is clickable. Poster size is `w342` by default.
+- **MovieCard** (`movie-card.tsx`): poster, then reason, title and a meta line like "1995, Action, Crime". No box around it. With `href`, the title is the link and the whole card is clickable. The link does not prefetch. Poster size is `w342` by default. In the feed every card links to its movie page.
 - **FeedItem** and **ReasonReveal** (`feed-item.tsx`, `reason-reveal.tsx`): a MovieCard at `w500` with a required reason, and the reveal motion.
 - **MovieCardSkeleton** (`movie-card-skeleton.tsx`): the static placeholder for a card.
+
+### Movie detail (`src/movie/`)
+
+The page of one movie, `/movie/[id]` ([spec 0010](docs/specs/0010-movie-detail-page/index.md)). See the last wireframe below.
+
+- **MovieDetailView** (`movie-detail-view.tsx`): the poster at `w500` with the reason in a SubtitleBar, then the title in `type-headline`, the meta line in Dust ("1995, 2h 50m, Crime, Drama"), the tagline in `type-title`, the synopsis, "Directed by" and its names, and the cast under a `type-section` heading. The cast is a plain list of up to 8 rows, "Name as Character", each with a Curtain rule above it, and no photos. A fact with no data is left out, with no placeholder. The reason is real page text, shown in full, and it does not animate: the reason reveal stays a feed only moment. With no reason there is no bar.
+- **MovieDetailSkeleton** (`movie-detail-skeleton.tsx`): the static placeholder in the same two shapes. The page wraps it with the status text "Loading movie".
+- **MovieNotFound** (`movie-not-found.tsx`): a Curtain panel with "Movie not found", one line of why, and the way back.
+- **BackToPicks** (`back-to-picks.tsx`): a quiet Dust link with a left arrow, 44px high, above the poster. It is always a real link to `/home`. When the movie was opened from the feed, it steps back in history instead, so the feed shows where the user left it.
+- The load error uses ErrorState with the words "We couldn't load this movie." The header and the back link stay above it.
 
 ### States (`src/ui/states/`)
 
 - **EmptyState**: title, body and an optional action link.
-- **ErrorState**: a client component with `role="alert"`, a title, a body and a "Try again" button that calls `onRetry`.
+- **ErrorState**: a client component with `role="alert"`, a title, a body and a "Try again" button that calls `onRetry`. The title is an `h2`, or the `h1` when the error is the only heading on the page (`titleAs`).
 - **LoadingState**: static skeletons plus a status message for screen readers.
 
 ### Swipe (`src/ui/swipe-card/`)
@@ -215,6 +226,31 @@ Phone first. Wider layouts keep the same composition.
 | 1995, Crime    |        | 1995       2004      |     | ...                               |
 | +------------+ |        +----------------------+     +-----------------------------------+
 | |  poster    | |
+```
+
+**Movie detail** (`/movie/[id]`, the poster keeps its reason, the facts read like end credits)
+
+```
+360 wide                      1280 wide
++------------------------+    +------------------------------------------------+
+| Moviz   Import Sign out|    | Moviz                          Import Sign out |
+| <- Back to picks       |    | <- Back to picks                               |
+| +--------------------+ |    | +--------------+  Heat                         |
+| |                    | |    | |              |  (headline, wraps)            |
+| |      poster        | |    | |    poster    |  1995, 2h 50m, Crime, Drama   |
+| |  (420 wide at most)| |    | |              |  A Los Angeles crime saga.    |
+| | Because you loved  | |    | |              |  Synopsis, lines stop at 62   |
+| | Collateral (2004)  | |    | | Because you  |  characters.                  |
+| +--------------------+ |    | | loved        |  Directed by Michael Mann     |
+| Heat                   |    | | Collateral   |  Cast                         |
+| 1995, 2h 50m, Crime    |    | +--------------+  ---------------------------  |
+| A Los Angeles crime... |    |                   Al Pacino as Vincent Hanna   |
+| Synopsis...            |    |                   ---------------------------  |
+| Directed by Michael... |    |                   Robert De Niro as Neil ...   |
+| Cast                   |    +------------------------------------------------+
+| ---------------------- |
+| Al Pacino as Vincent.. |    Two columns from 1024px. The page order is the
++------------------------+    same at both sizes. No reason, no bar.
 ```
 
 ## Rules for new screens

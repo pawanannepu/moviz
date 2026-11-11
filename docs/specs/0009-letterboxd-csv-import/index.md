@@ -1,7 +1,7 @@
 # 0009. Letterboxd CSV import: one upload at `/import`, matched in memory, saved in one transaction
 
 **Date**: 2026-11-11
-**Status**: In Progress
+**Status**: Accepted
 
 ## Summary
 

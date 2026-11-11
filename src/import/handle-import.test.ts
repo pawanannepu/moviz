@@ -32,7 +32,7 @@ const signedOut = async (): Promise<ActionUserResult> => ({
 });
 
 function upload(
-  content: string | Uint8Array | null,
+  content: string | Uint8Array<ArrayBuffer> | null,
   headers: Record<string, string | null> = { origin: ORIGIN },
 ) {
   const form = new FormData();
@@ -215,8 +215,10 @@ describe.skipIf(!TEST_DATABASE_URL)("handleImport (database)", () => {
   const csv = (...lines: string[]) => `${HEADER}\n${lines.join("\n")}\n`;
   const importsOf = (userId: string) =>
     t.db.select().from(imports).where(eq(imports.userId, userId));
-  const go = (userId: string, content: string | Uint8Array | null) =>
-    run(upload(content), { db: t.db, getUser: signedIn(userId) });
+  const go = (
+    userId: string,
+    content: string | Uint8Array<ArrayBuffer> | null,
+  ) => run(upload(content), { db: t.db, getUser: signedIn(userId) });
 
   it("saves the matching rows and answers with the counts and onboarded (AC-1, AC-2)", async () => {
     const user = await t.fx.newUser();
@@ -280,7 +282,7 @@ describe.skipIf(!TEST_DATABASE_URL)("handleImport (database)", () => {
 
   it("refuses a zip, a wrong header and an empty file with 422 and stores no import (AC-3)", async () => {
     const user = await t.fx.newUser();
-    const cases: [string | Uint8Array, string][] = [
+    const cases: [string | Uint8Array<ArrayBuffer>, string][] = [
       [new Uint8Array([0x50, 0x4b, 0x03, 0x04, 1, 2]), "looks_like_zip"],
       ["Foo,Bar\n1,2\n", "not_letterboxd_ratings"],
       [`${HEADER}\n`, "empty_file"],

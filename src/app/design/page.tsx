@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
+import type { MovieDetailMovie } from "@/movie/movie-detail-view";
 import { ErrorStateDemo } from "@/ui/design/error-state-demo";
 import { ImportDemo } from "@/ui/design/import-demo";
 import { isDesignPageHidden } from "@/ui/design/is-design-page-hidden";
 import { LoadMoreDemo } from "@/ui/design/load-more-demo";
+import { MovieDetailDemo, SAMPLE_DETAIL } from "@/ui/design/movie-detail-demo";
 import { SwipeDemo } from "@/ui/design/swipe-demo";
 import { ToastDemo } from "@/ui/design/toast-demo";
 import { FeedItem } from "@/ui/feed-item";
@@ -109,6 +111,22 @@ async function loadReviewMovies(): Promise<ReviewMovie[]> {
   ];
 }
 
+/**
+ * The movie the detail section shows: the full facts of the review page's real
+ * movie when the database is reachable, else made up facts with its poster.
+ */
+async function loadReviewDetail(real: ReviewMovie): Promise<MovieDetailMovie> {
+  try {
+    const { db } = await import("@/db/client");
+    const { getMovie } = await import("@/catalog/read/get-movie");
+    const movie = await getMovie(db, real.id);
+    if (movie.ok && !movie.value.removed) return movie.value;
+  } catch {
+    // Fall through to the made up facts.
+  }
+  return { ...SAMPLE_DETAIL, posterPath: real.posterPath };
+}
+
 function Section({
   id,
   title,
@@ -147,6 +165,7 @@ export default async function DesignPage() {
   if (isDesignPageHidden(env.VERCEL_ENV)) notFound();
 
   const [first, second, third, fourth] = await loadReviewMovies();
+  const detail = await loadReviewDetail(first);
   const cards = [
     { key: "plain", movie: first, href: undefined },
     { key: "link", movie: { ...first, id: 5 }, href: "/design" },
@@ -348,6 +367,14 @@ export default async function DesignPage() {
         note="Under the feed grid. One button covers ready, loading and failed. A lost session shows a sign in link, and the end of the feed shows a line."
       >
         <LoadMoreDemo />
+      </Section>
+
+      <Section
+        id="movie-detail"
+        title="Movie detail"
+        note="One movie in full. One column with a poster up to 420px wide, then two columns from 1024px. The reason sits on the poster in full, with no motion. A fact that is missing is left out."
+      >
+        <MovieDetailDemo movie={detail} />
       </Section>
 
       <Section

@@ -61,7 +61,13 @@ afterEach(cleanup);
 
 describe("FeedList first batch (AC-2, AC-3)", () => {
   it("shows every pick in a list with its reason as text, in order", () => {
-    render(<FeedList initialPicks={picks([3, 1, 2])} initialDone={false} />);
+    render(
+      <FeedList
+        userId="user-1"
+        initialPicks={picks([3, 1, 2])}
+        initialDone={false}
+      />,
+    );
 
     expect(screen.getAllByRole("list")).toHaveLength(1);
     const items = screen.getAllByRole("listitem");
@@ -73,26 +79,38 @@ describe("FeedList first batch (AC-2, AC-3)", () => {
   });
 
   it("shows a Load more picks button when more may exist", () => {
-    render(<FeedList initialPicks={picks([1])} initialDone={false} />);
+    render(
+      <FeedList
+        userId="user-1"
+        initialPicks={picks([1])}
+        initialDone={false}
+      />,
+    );
 
     expect(screen.getByRole("button", LOAD_MORE)).toBeTruthy();
   });
 
   it("shows the done line instead of the button when the first batch was the last (AC-9)", () => {
-    render(<FeedList initialPicks={picks([1])} initialDone />);
+    render(<FeedList userId="user-1" initialPicks={picks([1])} initialDone />);
 
     expect(screen.getByText("That's all for now.")).toBeTruthy();
     expect(screen.queryByRole("button", LOAD_MORE)).toBeNull();
   });
 
   it("does not move focus on load when the first batch is already done (AC-9)", () => {
-    render(<FeedList initialPicks={picks([1])} initialDone />);
+    render(<FeedList userId="user-1" initialPicks={picks([1])} initialDone />);
 
     expect(document.activeElement).toBe(document.body);
   });
 
   it("renders the live region empty on mount (AC-8)", () => {
-    render(<FeedList initialPicks={picks([1])} initialDone={false} />);
+    render(
+      <FeedList
+        userId="user-1"
+        initialPicks={picks([1])}
+        initialDone={false}
+      />,
+    );
 
     expect(announcement()).toBe("");
   });
@@ -101,7 +119,13 @@ describe("FeedList first batch (AC-2, AC-3)", () => {
 describe("FeedList Load more (AC-8, AC-12)", () => {
   it("sends the ids of every pick on the page, and nothing about the user", async () => {
     loadMoreAction.mockResolvedValue(ok({ picks: [], done: true }));
-    render(<FeedList initialPicks={picks([5, 6, 7])} initialDone={false} />);
+    render(
+      <FeedList
+        userId="user-1"
+        initialPicks={picks([5, 6, 7])}
+        initialDone={false}
+      />,
+    );
 
     press();
 
@@ -111,7 +135,13 @@ describe("FeedList Load more (AC-8, AC-12)", () => {
 
   it("appends the new picks below the old ones and announces the count", async () => {
     loadMoreAction.mockResolvedValue(ok({ picks: picks([8, 9]), done: false }));
-    render(<FeedList initialPicks={picks([1])} initialDone={false} />);
+    render(
+      <FeedList
+        userId="user-1"
+        initialPicks={picks([1])}
+        initialDone={false}
+      />,
+    );
 
     press();
 
@@ -125,7 +155,13 @@ describe("FeedList Load more (AC-8, AC-12)", () => {
 
   it("announces one pick in the singular", async () => {
     loadMoreAction.mockResolvedValue(ok({ picks: picks([8]), done: false }));
-    render(<FeedList initialPicks={picks([1])} initialDone={false} />);
+    render(
+      <FeedList
+        userId="user-1"
+        initialPicks={picks([1])}
+        initialDone={false}
+      />,
+    );
 
     press();
 
@@ -136,7 +172,13 @@ describe("FeedList Load more (AC-8, AC-12)", () => {
     loadMoreAction
       .mockResolvedValueOnce(ok({ picks: picks([8, 9]), done: false }))
       .mockResolvedValueOnce(ok({ picks: [], done: true }));
-    render(<FeedList initialPicks={picks([1])} initialDone={false} />);
+    render(
+      <FeedList
+        userId="user-1"
+        initialPicks={picks([1])}
+        initialDone={false}
+      />,
+    );
 
     press();
     await waitFor(() => expect(announcement()).toBe("2 more picks loaded"));
@@ -150,7 +192,13 @@ describe("FeedList Load more (AC-8, AC-12)", () => {
     loadMoreAction.mockResolvedValue(
       ok({ picks: picks([1, 8, 8, 9]), done: false }),
     );
-    render(<FeedList initialPicks={picks([1, 2])} initialDone={false} />);
+    render(
+      <FeedList
+        userId="user-1"
+        initialPicks={picks([1, 2])}
+        initialDone={false}
+      />,
+    );
 
     press();
 
@@ -163,7 +211,13 @@ describe("FeedList Load more (AC-8, AC-12)", () => {
 
   it("announces nothing when every incoming pick is a repeat (AC-8, AC-12)", async () => {
     loadMoreAction.mockResolvedValue(ok({ picks: picks([1, 2]), done: false }));
-    render(<FeedList initialPicks={picks([1, 2])} initialDone={false} />);
+    render(
+      <FeedList
+        userId="user-1"
+        initialPicks={picks([1, 2])}
+        initialDone={false}
+      />,
+    );
 
     press();
 
@@ -177,7 +231,13 @@ describe("FeedList Load more (AC-8, AC-12)", () => {
   it("holds the pending state, ignores a second press and keeps focus on the button (AC-8)", async () => {
     const call = deferred<unknown>();
     loadMoreAction.mockReturnValue(call.promise);
-    render(<FeedList initialPicks={picks([1])} initialDone={false} />);
+    render(
+      <FeedList
+        userId="user-1"
+        initialPicks={picks([1])}
+        initialDone={false}
+      />,
+    );
     const button = screen.getByRole("button", LOAD_MORE);
     button.focus();
 
@@ -203,7 +263,13 @@ describe("FeedList Load more (AC-8, AC-12)", () => {
     loadMoreAction
       .mockResolvedValueOnce(ok({ picks: picks([2]), done: false }))
       .mockReturnValueOnce(second.promise);
-    render(<FeedList initialPicks={picks([1])} initialDone={false} />);
+    render(
+      <FeedList
+        userId="user-1"
+        initialPicks={picks([1])}
+        initialDone={false}
+      />,
+    );
 
     press();
     await waitFor(() => expect(announcement()).toBe("1 more pick loaded"));
@@ -220,7 +286,13 @@ describe("FeedList Load more (AC-8, AC-12)", () => {
 describe("FeedList done (AC-9)", () => {
   it("announces the count, then replaces the button with the done line and moves focus to it", async () => {
     loadMoreAction.mockResolvedValue(ok({ picks: picks([2, 3]), done: true }));
-    render(<FeedList initialPicks={picks([1])} initialDone={false} />);
+    render(
+      <FeedList
+        userId="user-1"
+        initialPicks={picks([1])}
+        initialDone={false}
+      />,
+    );
 
     press();
 
@@ -233,7 +305,13 @@ describe("FeedList done (AC-9)", () => {
 
   it("goes done with nothing announced when the last batch is empty", async () => {
     loadMoreAction.mockResolvedValue(ok({ picks: [], done: true }));
-    render(<FeedList initialPicks={picks([1])} initialDone={false} />);
+    render(
+      <FeedList
+        userId="user-1"
+        initialPicks={picks([1])}
+        initialDone={false}
+      />,
+    );
 
     press();
 
@@ -245,7 +323,13 @@ describe("FeedList done (AC-9)", () => {
 describe("FeedList failures (AC-10)", () => {
   async function failWith(result: unknown) {
     loadMoreAction.mockResolvedValue(result);
-    render(<FeedList initialPicks={picks([1, 2])} initialDone={false} />);
+    render(
+      <FeedList
+        userId="user-1"
+        initialPicks={picks([1, 2])}
+        initialDone={false}
+      />,
+    );
     press();
   }
 
@@ -270,7 +354,13 @@ describe("FeedList failures (AC-10)", () => {
 
   it("treats a call that rejects as a failure and keeps the picks", async () => {
     loadMoreAction.mockRejectedValue(new Error("network down"));
-    render(<FeedList initialPicks={picks([1, 2])} initialDone={false} />);
+    render(
+      <FeedList
+        userId="user-1"
+        initialPicks={picks([1, 2])}
+        initialDone={false}
+      />,
+    );
 
     press();
 
@@ -283,7 +373,13 @@ describe("FeedList failures (AC-10)", () => {
     loadMoreAction
       .mockRejectedValueOnce(new Error("network down"))
       .mockResolvedValueOnce(ok({ picks: picks([3]), done: false }));
-    render(<FeedList initialPicks={picks([1, 2])} initialDone={false} />);
+    render(
+      <FeedList
+        userId="user-1"
+        initialPicks={picks([1, 2])}
+        initialDone={false}
+      />,
+    );
     press();
 
     fireEvent.click(await screen.findByRole("button", { name: "Try again" }));
@@ -312,7 +408,11 @@ describe("FeedList failures (AC-10)", () => {
 describe("FeedList accessibility (AC-15)", () => {
   it("has no WCAG A or AA violations when loaded", async () => {
     const { container } = render(
-      <FeedList initialPicks={picks([1, 2, 3])} initialDone={false} />,
+      <FeedList
+        userId="user-1"
+        initialPicks={picks([1, 2, 3])}
+        initialDone={false}
+      />,
     );
 
     expect(await axeViolations(container)).toEqual([]);
@@ -321,7 +421,11 @@ describe("FeedList accessibility (AC-15)", () => {
   it("has none while a press is pending", async () => {
     loadMoreAction.mockReturnValue(new Promise(() => {}));
     const { container } = render(
-      <FeedList initialPicks={picks([1, 2])} initialDone={false} />,
+      <FeedList
+        userId="user-1"
+        initialPicks={picks([1, 2])}
+        initialDone={false}
+      />,
     );
     press();
     await screen.findByRole("button", { name: "Loading more picks" });
@@ -332,7 +436,11 @@ describe("FeedList accessibility (AC-15)", () => {
   it("has none after a failure", async () => {
     loadMoreAction.mockRejectedValue(new Error("down"));
     const { container } = render(
-      <FeedList initialPicks={picks([1, 2])} initialDone={false} />,
+      <FeedList
+        userId="user-1"
+        initialPicks={picks([1, 2])}
+        initialDone={false}
+      />,
     );
     press();
     await screen.findByRole("button", { name: "Try again" });
@@ -342,7 +450,7 @@ describe("FeedList accessibility (AC-15)", () => {
 
   it("has none once the feed is done", async () => {
     const { container } = render(
-      <FeedList initialPicks={picks([1, 2])} initialDone />,
+      <FeedList userId="user-1" initialPicks={picks([1, 2])} initialDone />,
     );
 
     expect(await axeViolations(container)).toEqual([]);

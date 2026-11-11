@@ -110,6 +110,10 @@ export const UNMATCHED_LOAD_LABELS = {
 export const UNMATCHED_LOAD_MESSAGES = {
   error: "We couldn't load more rows. Check your connection and try again.",
   session_ended: "Your session ended. Sign in to see more rows.",
+  /** The import was pruned or removed while the page was open (`not_found`). */
+  not_found: "That import is no longer saved. Reload the page.",
+  /** The cursor or the input was rejected (`invalid_cursor`, `invalid_input`). */
+  invalid: "We could not load more rows. Reload the page and try again.",
 } as const;
 
 export const UNMATCHED_DONE_LINE = "That's every row.";

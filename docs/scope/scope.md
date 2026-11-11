@@ -23,8 +23,8 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 8 | Taste profile & recommender | Slice 1 | done |
 | 9 | Personalized feed with reasons | Slice 1 | done |
 | 10 | Product analytics & error monitoring | Slice 2 | dropped |
-| 11 | Letterboxd CSV import | Slice 3 | in-progress |
-| 12 | Movie detail page | Slice 4 | planned |
+| 11 | Letterboxd CSV import | Slice 3 | done |
+| 12 | Movie detail page | Slice 4 | in-progress |
 | 13 | Watchlist & seen list | Slice 5 | planned |
 | 14 | Feed feedback | Slice 6 | planned |
 | 15 | Bite search (mood and vibe) | Slice 7 | planned |
@@ -173,15 +173,24 @@ spec [0009](../specs/0009-letterboxd-csv-import/index.md) · code in `src/import
   - [x] Onboarding rule, keep 5 pruning, export and delete (AC-8, AC-10, AC-13)
   - [x] Not matched list with Load more, and the entry links (AC-11, AC-15)
   - [x] Full page states, accessibility and the 20,000 row limits check (AC-14, AC-16)
-- [ ] Verify it: `/check verify letterboxd csv import`
-- [ ] Test it: `/test letterboxd csv import`
+- [x] Verify it: `/check verify letterboxd csv import`
+- [x] Test it: `/test letterboxd csv import`
 
 ## Slice 4: Movie detail
 
 ### 12. Movie detail page
 A page per movie with poster, synopsis, cast, year, genres, and why it was recommended when you arrive from the feed.
 **Done when:** tapping a feed card opens the detail page, it works on phone and desktop, and an unknown movie shows a not found state.
-- [ ] Build it: `/develop movie detail page`
+spec [0010](../specs/0010-movie-detail-page/index.md) · code in `src/movie/`, `src/app/(protected)/movie/`, `src/recommend/reason-for.ts`, `src/feed/feed-store.tsx`
+- [x] Design it (spec): `/architect movie detail page`
+- [x] Build it: `/develop movie detail page`
+  - [x] Thread: feed cards link to `/movie/[id]`, the id check, a bare page and the not found state (AC-1, AC-2, AC-3, AC-12)
+  - [x] The reason: `reasonFor`, the bar on the poster and its failure fallback (AC-7, AC-8, AC-9, AC-16, AC-17)
+  - [x] All the facts, the two layouts, the page title, and the loading and error states (AC-4, AC-5, AC-6, AC-10, AC-11, AC-19)
+  - [x] The feed keeps its place: the store, restore and focus, and "Back to picks" (AC-13, AC-14, AC-15)
+  - [x] Accessibility, `design.md`, the `/design` page and the browser pass (AC-18, AC-20)
+- [ ] Verify it: `/check verify movie detail page`
+- [ ] Test it: `/test movie detail page`
 
 ## Slice 5: Watchlist and seen
 
@@ -231,6 +240,7 @@ Out of scope for this build pass, kept so the plan stays honest.
 - **Native mobile app**: swipe as a native app · needs a decision
 - **Other languages**: translated interface · needs a decision
 - **Letterboxd import extras**: download unmatched rows as a CSV, undo an import, accept the full export zip, import watched and watchlist files, a progress bar for large files · needs a decision · from spec 0009
+- **Movie detail extras**: a per user limit on the page (with launch hardening), a pending hint on card taps, Cache Components in place of the feed store · needs a decision · from spec 0010
 
 ## Legend
 

@@ -192,6 +192,27 @@
 }
 
 /*
+ * The movie detail page. One column, with a poster at most 420px wide (the
+ * same cap as a feed item on one column). From 1024px the poster sits on the
+ * left, at 40% of the row up to 420px, and the text column on the right.
+ */
+@utility detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px;
+
+  & > :first-child {
+    max-width: 420px;
+  }
+
+  @media (min-width: 1024px) {
+    grid-template-columns: minmax(0, min(40%, 420px)) minmax(0, 1fr);
+    gap: 48px;
+    align-items: start;
+  }
+}
+
+/*
  * Motion moment 2: the reason wipe. `ReasonReveal` sets `data-reveal` only on
  * items below the fold, and never with reduced motion, so without script or
  * with reduced motion the bar is simply visible.

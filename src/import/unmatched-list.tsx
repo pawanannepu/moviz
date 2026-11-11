@@ -27,11 +27,35 @@ type UnmatchedListProps = {
 
 const SIGN_IN_AGAIN = `${SIGN_IN_PATH}?returnTo=${encodeURIComponent(IMPORT_PATH)}`;
 
-const COPY = {
-  labels: UNMATCHED_LOAD_LABELS,
-  messages: UNMATCHED_LOAD_MESSAGES,
-  doneLine: UNMATCHED_DONE_LINE,
-} as const;
+/** Which words the bar shows when a load fails (spec 0009, Messages). */
+type LoadFailure = "error" | "not_found" | "invalid";
+
+/** Maps the action's error code to the wording the spec gives it. */
+function failureOf(
+  code: Exclude<Awaited<ReturnType<LoadMore>>, { ok: true }>["error"]["code"],
+): LoadFailure {
+  switch (code) {
+    case "not_found":
+      return "not_found";
+    case "invalid_cursor":
+    case "invalid_input":
+      return "invalid";
+    case "unauthenticated":
+    case "db_unavailable":
+      return "error";
+  }
+}
+
+/** The bar's words for one failure kind. */
+const copyFor = (failure: LoadFailure) =>
+  ({
+    labels: UNMATCHED_LOAD_LABELS,
+    messages: {
+      error: UNMATCHED_LOAD_MESSAGES[failure],
+      session_ended: UNMATCHED_LOAD_MESSAGES.session_ended,
+    },
+    doneLine: UNMATCHED_DONE_LINE,
+  }) as const;
 
 /**
  * The rows an import left out, 50 at a time (spec 0009, AC-11). It seeds its
@@ -49,6 +73,7 @@ export function UnmatchedList({
   const [rows, setRows] = useState<UnmatchedPageRow[]>(initial.rows);
   const [cursor, setCursor] = useState(initial.nextCursor);
   const [state, setState] = useState<LoadMoreState>("idle");
+  const [failure, setFailure] = useState<LoadFailure>("error");
   const [loadedMore, setLoadedMore] = useState(false);
   const [announcement, setAnnouncement] = useState("");
 
@@ -61,8 +86,12 @@ export function UnmatchedList({
     const result = await loadMore({ importId, after: cursor }).catch(
       () => null,
     );
-    if (!result) return setState("error");
+    if (!result) {
+      setFailure("error");
+      return setState("error");
+    }
     if (!result.ok) {
+      setFailure(failureOf(result.error.code));
       return setState(
         result.error.code === "unauthenticated" ? "session_ended" : "error",
       );
@@ -123,7 +152,7 @@ export function UnmatchedList({
           state={state}
           onLoadMore={loadNext}
           signInHref={SIGN_IN_AGAIN}
-          copy={COPY}
+          copy={copyFor(failure)}
         />
       ) : null}
     </section>
