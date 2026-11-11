@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { ErrorStateDemo } from "@/ui/design/error-state-demo";
 import { isDesignPageHidden } from "@/ui/design/is-design-page-hidden";
+import { LoadMoreDemo } from "@/ui/design/load-more-demo";
 import { SwipeDemo } from "@/ui/design/swipe-demo";
 import { ToastDemo } from "@/ui/design/toast-demo";
 import { FeedItem } from "@/ui/feed-item";
@@ -333,12 +334,19 @@ export default async function DesignPage() {
         <div className="flex flex-col gap-6">
           <EmptyState
             title="No picks yet"
-            body="Swipe a few movies and your first picks show up here."
-            action={{ href: "/", label: "Start swiping" }}
+            body="There are no movies to suggest right now. Check back soon."
           />
           <ErrorStateDemo />
           <LoadingState label="Loading your picks" />
         </div>
+      </Section>
+
+      <Section
+        id="load-more"
+        title="Load more bar"
+        note="Under the feed grid. One button covers ready, loading and failed. A lost session shows a sign in link, and the end of the feed shows a line."
+      >
+        <LoadMoreDemo />
       </Section>
 
       <Section

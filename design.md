@@ -108,7 +108,7 @@ With `prefers-reduced-motion: reduce`: the exit, the return, the reveal and the 
 Sentence case, plain verbs, active voice. An action keeps one name through the whole flow: the "Like" button, then the announcement "Liked Heat". Errors say what happened and how to fix it, with no apology. Empty states invite the next action.
 
 - Landing: "Picks that say why." and "Swipe a few movies you know. Every pick Moviz makes comes with its reason."
-- Empty feed: "No picks yet", "Swipe a few movies and your first picks show up here."
+- Empty feed: "No picks yet", "There are no movies to suggest right now. Check back soon." No action, because a finished user cannot reopen the swipe deck.
 - Error: "Couldn't load your picks", "Check your connection and try again."
 - Loading status for screen readers: "Loading your picks".
 - Swipe announcements: "Liked {title}", "Disliked {title}", "Marked {title} as not seen".

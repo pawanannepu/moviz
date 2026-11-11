@@ -79,3 +79,20 @@ export function toDbFailure(error: unknown): DbFailure | null {
   }
   return messageSaysUnavailable ? { code: "db_unavailable" } : null;
 }
+
+/**
+ * A clean error to throw in place of an unexpected one (a bug), so nothing
+ * personal reaches a log. Drizzle puts the query and its parameters (user ids,
+ * movie ids, scores) in its message and keeps them on the error, and Next.js
+ * logs whatever a page or a Server Action throws. This keeps only the kind of
+ * error and the SQLSTATE, with no message, parameters or `cause`. `where`
+ * names the function that failed.
+ */
+export function unexpectedDbError(where: string, error: unknown): Error {
+  const chain = errorChain(error);
+  const pg = chain.find((link) => "code" in link);
+  const code = typeof pg?.code === "string" ? pg.code : "none";
+  const kind =
+    error instanceof Error ? error.constructor.name || "Error" : typeof error;
+  return new Error(`${where} failed: ${kind} (code ${code})`);
+}

@@ -98,7 +98,7 @@ test.describe("the gate (AC-1)", () => {
     await page.goto("/onboarding");
     await expect(page).toHaveURL("/home");
     await expect(
-      page.getByText(`You're signed in as ${finished.email}.`),
+      page.getByRole("heading", { level: 1, name: "Your picks" }),
     ).toBeVisible();
   });
 });
@@ -122,8 +122,11 @@ test.describe("swiping to the feed (AC-3, AC-4, AC-7)", () => {
     await expect(counter(page, "10 rated")).toBeVisible();
 
     await page.getByRole("button", { name: "See my picks" }).click();
-    await expect(page).toHaveURL("/home");
-    await expect(page.getByText("You're signed in as")).toBeVisible();
+    // The finish call and the feed page's first script take a few seconds on a cold start.
+    await expect(page).toHaveURL("/home", { timeout: COLD_START_MS });
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Your picks" }),
+    ).toBeVisible();
 
     await page.goBack();
     await expect(page).not.toHaveURL(/\/onboarding$/);

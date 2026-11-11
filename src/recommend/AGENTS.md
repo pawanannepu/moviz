@@ -4,17 +4,17 @@ The taste recommender. It turns a user's ratings into a ranked list of movies th
 
 ## Key files
 
-| File | Owns |
-| ---- | ---- |
-| `recommend-movies.ts` | `recommendMovies(db, input)`, the one entry point. Validates input with Zod, opens one transaction, picks taste or popular mode, returns picks with a reason and a taste summary |
-| `load-taste.ts` | The user's liked and disliked counts, and the capped anchors (30 liked, 10 disliked) as ids, weights, titles, years and scores. It never loads an embedding into Node |
-| `score-candidates.ts` | The one scoring query. Every listable, available, embedded movie against the anchors, best first, at most 300 rows |
-| `popular-candidates.ts` | The fallback: listable, available movies by vote count, nulls last |
-| `load-pick-cards.ts` | Card fields and genre names for the chosen ids, in one query, put back in the chosen order |
-| `rules.ts` | Pure rules: `ratingWeight`, `isLikedScore`, `tasteStrength`, `varietyCap`, `pickWithVariety` |
-| `weights.ts` | Every tuning number, in one file |
-| `types.ts` | `Pick`, `Reason`, `TasteProfile`, `Recommendations` and the error types the feed imports |
-| `pg-array.ts` | Formats a number list as one Postgres array parameter |
+| File                    | Owns                                                                                                                                                                             |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `recommend-movies.ts`   | `recommendMovies(db, input)`, the one entry point. Validates input with Zod, opens one transaction, picks taste or popular mode, returns picks with a reason and a taste summary |
+| `load-taste.ts`         | The user's liked and disliked counts, and the capped anchors (30 liked, 10 disliked) as ids, weights, titles, years and scores. It never loads an embedding into Node            |
+| `score-candidates.ts`   | The one scoring query. Every listable, available, embedded movie against the anchors, best first, at most 300 rows                                                               |
+| `popular-candidates.ts` | The fallback: listable, available movies by vote count, nulls last                                                                                                               |
+| `load-pick-cards.ts`    | Card fields and genre names for the chosen ids, in one query, put back in the chosen order                                                                                       |
+| `rules.ts`              | Pure rules: `ratingWeight`, `isLikedScore`, `tasteStrength`, `varietyCap`, `pickWithVariety`                                                                                     |
+| `weights.ts`            | Every tuning number, in one file                                                                                                                                                 |
+| `types.ts`              | `Pick`, `Reason`, `TasteProfile`, `Recommendations` and the error types the feed imports                                                                                         |
+| `pg-array.ts`           | Formats a number list as one Postgres array parameter                                                                                                                            |
 
 ## Commands
 
@@ -26,7 +26,7 @@ pnpm test src/recommend    # unit tests run anywhere; database tests need DATABA
 
 - Nothing about taste is stored. There is no table, column or migration. A rating saved just before a call changes that call.
 - The caller passes the user id from the live session. This code never reads the request. The feed's "load more" action validates with Zod and checks the signed in user before it calls in.
-- Expected failures return a typed result: `invalid_input` and `db_unavailable`. Any other error is a bug and is rethrown. The internal functions take an `Executor`, return plain values, and let errors rise to the one `catch` in `recommendMovies`.
+- Expected failures return a typed result: `invalid_input` and `db_unavailable`. Any other error is a bug and is thrown again through `unexpectedDbError` (`src/db/failure.ts`), a clean error with only the error kind and the SQLSTATE. Never rethrow the raw error: Drizzle puts the query parameters (user id, movie ids, weights) in its message, and Next.js logs what a page or action throws. The internal functions take an `Executor`, return plain values, and let errors rise to the one `catch` in `recommendMovies`.
 - All reads of one call run in one `read only` transaction at `REPEATABLE READ`, so counts, anchors, scores and reasons come from one snapshot. The number of queries does not grow with the limit or the number of ratings.
 - The scan is exact on purpose. Never write `ORDER BY embedding <=> $vector LIMIT k` against `movie_embeddings`: the planner could pick the HNSW index, which is approximate and can lose rows after the filters. The anchors sit in a materialized CTE so each anchor vector is read once.
 - Every tuning number lives in `weights.ts`, and `weights.test.ts` pins them. Change the spec and that test together.

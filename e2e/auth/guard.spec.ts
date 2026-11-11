@@ -158,7 +158,7 @@ test.describe("signed in", () => {
     await expect(page).toHaveURL("/home");
 
     await expect(
-      page.getByText(`You're signed in as ${account.email}.`),
+      page.getByRole("heading", { level: 1, name: "Your picks" }),
     ).toBeVisible();
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
       "content",

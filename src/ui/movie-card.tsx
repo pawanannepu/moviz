@@ -28,7 +28,8 @@ export type MovieCardProps = {
  * A movie as a poster frame, then its title and a small meta line. The poster
  * is the card: there is no box around it. DOM order is poster, reason, title,
  * meta. With `href`, the title is the link and the whole card is clickable
- * (spec 0004, AC-8). A server component.
+ * (spec 0004, AC-8). It has no server only imports, so it renders on the
+ * server or inside a client component such as the feed list (spec 0008).
  */
 export function MovieCard({
   movie,

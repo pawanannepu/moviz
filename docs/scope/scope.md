@@ -21,8 +21,8 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 6 | Email sign in | Slice 1 | done |
 | 7 | Swipe onboarding | Slice 1 | done |
 | 8 | Taste profile & recommender | Slice 1 | done |
-| 9 | Personalized feed with reasons | Slice 1 | planned |
-| 10 | Product analytics & error monitoring | Slice 2 | planned |
+| 9 | Personalized feed with reasons | Slice 1 | done |
+| 10 | Product analytics & error monitoring | Slice 2 | dropped |
 | 11 | Letterboxd CSV import | Slice 3 | planned |
 | 12 | Movie detail page | Slice 4 | planned |
 | 13 | Watchlist & seen list | Slice 5 | planned |
@@ -139,14 +139,23 @@ spec [0007](../specs/0007-taste-profile-recommender/index.md) · code in `src/re
 - [x] Verify it: `/check verify taste profile & recommender`
 - [x] Test it: `/test taste profile & recommender`
 
-### 9. Personalized feed with reasons · needs a decision
+### 9. Personalized feed with reasons
 The home screen: a scrollable feed of recommended movies, each with a short human readable reason such as "because you rated Heat highly".
 **Done when:** a user who finished onboarding sees a feed of movies they have not rated, every card shows a reason, and loading, empty, and error states render.
-- [ ] Design it (spec): `/architect personalized feed with reasons`
+spec [0008](../specs/0008-personalized-feed/index.md) · code in `src/feed/`, `src/ui/load-more-bar.tsx`, `src/app/(protected)/home/`
+- [x] Design it (spec): `/architect personalized feed with reasons`
+- [x] Build it: `/develop personalized feed with reasons`
+  - [x] Thread: guarded page, header, loading state and the first batch with reason sentences (AC-1, AC-2, AC-3, AC-5, AC-13, AC-16)
+  - [x] Early picks line, empty state and first load error (AC-4, AC-6, AC-7)
+  - [x] Load more: action, client list, announcements and the done line (AC-8, AC-9, AC-11, AC-12)
+  - [x] Load more failures: error, rejected call and lost session (AC-10)
+  - [x] Privacy, accessibility and the browser pass (AC-13, AC-14, AC-15, AC-16)
+- [x] Verify it: `/check verify personalized feed with reasons`
+- [x] Test it: `/test personalized feed with reasons`
 
 ## Slice 2: Know what is happening
 
-### 10. Product analytics & error monitoring · needs a decision
+### 10. Product analytics & error monitoring · dropped
 See signups, onboarding completion, import success, and crashes, so you can tell whether people reach the feed.
 **Done when:** key events (signup, swipe completed, feed viewed) are recorded without personal ratings content, and unhandled errors reach one place you can read.
 - [ ] Design it (spec): `/architect product analytics & error monitoring`

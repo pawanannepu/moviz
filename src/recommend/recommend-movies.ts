@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { Db, Executor } from "@/db/create-db";
-import { toDbFailure } from "@/db/failure";
+import { toDbFailure, unexpectedDbError } from "@/db/failure";
 import { err, ok, type Result } from "@/lib/result";
 import { loadPickCards } from "./load-pick-cards";
 import { loadTaste } from "./load-taste";
@@ -86,7 +86,8 @@ async function choosePicks(
  * Every read runs in one read only `REPEATABLE READ` transaction, so counts,
  * anchors, scores and reasons come from one snapshot. Returns `invalid_input`
  * for a bad argument and `db_unavailable` when the database cannot be reached;
- * any other error is a bug and is rethrown. It reads only this user's ratings
+ * any other error is a bug and is thrown again as a clean error that holds no
+ * ids, scores or query parameters (`unexpectedDbError`). It reads only this user's ratings
  * and public catalog rows, and never logs rating content.
  */
 export async function recommendMovies(
@@ -125,6 +126,6 @@ export async function recommendMovies(
   } catch (error) {
     const failure = toDbFailure(error);
     if (failure?.code === "db_unavailable") return err(failure);
-    throw error;
+    throw unexpectedDbError("recommendMovies", error);
   }
 }

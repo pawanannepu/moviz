@@ -250,7 +250,7 @@ test.describe("signing in", () => {
 
     await expect(page).toHaveURL("/home");
     await expect(
-      page.getByText(`You're signed in as ${account.email}.`),
+      page.getByRole("heading", { level: 1, name: "Your picks" }),
     ).toBeVisible();
   });
 

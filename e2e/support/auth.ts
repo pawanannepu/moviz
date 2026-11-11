@@ -226,6 +226,44 @@ export async function markOnboardedInDb(email: string): Promise<void> {
 }
 
 /**
+ * Gives an account `count` ratings of `score` on the most voted movies that
+ * have an embedding, straight in the database the server uses. A liked score
+ * (6 or more) gives the feed a taste signal; fewer than 5 liked makes it
+ * `thin` (spec 0008). Needs `pnpm embed:catalog` to have run on that database.
+ */
+export async function rateEmbeddedMoviesInDb(
+  email: string,
+  count: number,
+  score: number,
+): Promise<void> {
+  try {
+    process.loadEnvFile(".env.local");
+  } catch {
+    // No local env file (for example in CI). The real environment is used.
+  }
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  try {
+    const result = await pool.query(
+      `insert into ratings (user_id, movie_id, score, source)
+       select u.id, m.id, $2, 'manual'
+       from "user" u,
+         lateral (
+           select m.id from movies m
+           join movie_embeddings e on e.movie_id = m.id
+           order by m.vote_count desc nulls last, m.id
+           limit $3
+         ) m
+       where u.email = $1
+       on conflict do nothing`,
+      [email, score, count],
+    );
+    expect(result.rowCount, "the catalog needs embedded movies").toBe(count);
+  } finally {
+    await pool.end();
+  }
+}
+
+/**
  * A verified account, made through the API so a test does not repeat the sign
  * up flow. It has finished onboarding unless `onboarded` is false, so signing
  * in lands on `/home`.
