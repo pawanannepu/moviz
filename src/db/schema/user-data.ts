@@ -184,3 +184,33 @@ export const importUnmatchedRows = pgTable(
     ),
   ],
 );
+
+/** What a user told the feed about one movie (spec 0011). */
+export const feedbackKind = pgEnum("feedback_kind", [
+  "not_interested",
+  "more_like_this",
+]);
+
+/**
+ * One feedback row per user and movie (spec 0002, AC-6; spec 0011). `not_interested`
+ * hides the movie from the feed and the deck; `more_like_this` makes it an extra
+ * liked anchor. `created_at` is reset only when the kind changes.
+ */
+export const feedFeedback = pgTable(
+  "feed_feedback",
+  {
+    userId: userId(),
+    movieId: movieId(),
+    kind: feedbackKind("kind").notNull(),
+    createdAt: timestamptz("created_at").defaultNow().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.movieId] }),
+    // Nulls first so a plain `ORDER BY ... DESC` (which is nulls first) can use it.
+    index("feed_feedback_user_kind_created_idx").on(
+      t.userId,
+      t.kind,
+      t.createdAt.desc().nullsFirst(),
+    ),
+  ],
+);

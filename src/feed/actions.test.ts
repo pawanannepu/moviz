@@ -33,6 +33,7 @@ const PICK: FeedPick = {
     genres: [],
   },
   reason: "Because you loved Secret Anchor (1995)",
+  moreLikeThis: false,
 };
 
 beforeEach(() => {

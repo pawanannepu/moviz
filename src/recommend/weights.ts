@@ -15,6 +15,13 @@ export const PRIOR_WEIGHT = 0.1;
 export const PRIOR_FULL_VOTES = 5000;
 /** The most liked movies used as anchors. */
 export const LIKED_ANCHORS = 30;
+/**
+ * The most "More like this" movies used as extra liked anchors, newest first
+ * (spec 0011, AC-6). They come on top of the `LIKED_ANCHORS` rating anchors.
+ */
+export const MORE_LIKE_THIS_ANCHORS = 10;
+/** The pull of a "More like this" anchor: the same as a rating of 10. */
+export const MORE_LIKE_THIS_WEIGHT = 1.0;
 /** The most disliked movies used as anchors. */
 export const DISLIKED_ANCHORS = 10;
 /** Fewer liked movies than this means the taste profile is thin. */

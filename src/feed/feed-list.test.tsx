@@ -15,6 +15,10 @@ import { axeViolations } from "@/test-support/axe";
 // cover what the list does with each result: the ids it sends, the dedupe, the
 // announcement, the end states and the failures (spec 0008, AC-8 to AC-12).
 const loadMoreAction = vi.fn();
+const setFeedbackAction = vi.fn();
+vi.mock("@/feedback/actions", () => ({
+  setFeedbackAction: (...args: unknown[]) => setFeedbackAction(...args),
+}));
 vi.mock("./actions", () => ({
   loadMoreAction: (...args: unknown[]) => loadMoreAction(...args),
 }));
@@ -32,6 +36,7 @@ function pick(id: number): FeedPick {
       genres: ["Drama"],
     },
     reason: `Because you loved Anchor ${id} (1990)`,
+    moreLikeThis: false,
   };
 }
 

@@ -19,6 +19,7 @@ const anchorOf = (movieId: number, score: number): TasteAnchor => ({
   releaseYear: null,
   score,
   weight: ratingWeight(score),
+  source: "rating",
 });
 
 /** The popularity nudge from AC-10, written out the long way. */

@@ -6,6 +6,7 @@ import {
   type UserNotFound,
 } from "@/db/failure";
 import {
+  feedFeedback,
   imports,
   importUnmatchedRows,
   movies,
@@ -64,6 +65,14 @@ export type UserExport = {
     title: string;
     year: number | null;
     skippedAt: string;
+  }[];
+  /** "Not interested" and "More like this" taps, newest first (spec 0011). */
+  feedback: {
+    movieId: number;
+    title: string;
+    year: number | null;
+    kind: "not_interested" | "more_like_this";
+    createdAt: string;
   }[];
   /** Saved Letterboxd imports, newest first, each with the rows that did not become ratings (spec 0009). */
   imports: {
@@ -166,6 +175,19 @@ export async function exportUserData(
             desc(watchlistEntries.movieId),
           );
 
+        const feedbackRows = await tx
+          .select({
+            movieId: feedFeedback.movieId,
+            title: movies.title,
+            year: movies.releaseYear,
+            kind: feedFeedback.kind,
+            createdAt: feedFeedback.createdAt,
+          })
+          .from(feedFeedback)
+          .innerJoin(movies, eq(movies.id, feedFeedback.movieId))
+          .where(eq(feedFeedback.userId, userId))
+          .orderBy(desc(feedFeedback.createdAt), desc(feedFeedback.movieId));
+
         const importRows = await tx
           .select()
           .from(imports)
@@ -230,6 +252,13 @@ export async function exportUserData(
             title: row.title,
             year: row.year,
             addedAt: iso(row.addedAt),
+          })),
+          feedback: feedbackRows.map((row) => ({
+            movieId: row.movieId,
+            title: row.title,
+            year: row.year,
+            kind: row.kind,
+            createdAt: iso(row.createdAt),
           })),
           imports: importRows.map((row) => ({
             id: row.id,

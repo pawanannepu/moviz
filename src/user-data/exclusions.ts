@@ -1,5 +1,5 @@
 import { type AnyColumn, type SQL, sql } from "drizzle-orm";
-import { ratings, swipeSkips } from "@/db/schema";
+import { feedFeedback, ratings, swipeSkips } from "@/db/schema";
 
 /** Where the movies are shown: the swipe deck or the personalized feed. */
 export type Surface = "deck" | "feed";
@@ -12,10 +12,10 @@ export type Surface = "deck" | "feed";
  * db.select().from(movies).where(unavailableMovies(userId, movies.id, "feed"))
  * ```
  *
- * Today both surfaces hide rated and skipped movies. Feature 13 adds watchlisted
- * movies to the deck only (the feed keeps them); feature 14 adds `not_interested`
- * to both (`more_like_this` stays visible). The signature does not change, which is
- * why `surface` is accepted before anything reads it.
+ * Both surfaces hide rated, skipped and `not_interested` movies (spec 0011,
+ * AC-4); a `more_like_this` movie stays visible. Feature 13 may add watchlisted
+ * movies to the deck only (the feed keeps them). The signature does not change,
+ * which is why `surface` is accepted before anything reads it.
  */
 export function unavailableMovies(
   userId: string,
@@ -30,5 +30,10 @@ export function unavailableMovies(
     select 1 from ${swipeSkips}
     where ${swipeSkips.userId} = ${userId}::text and ${swipeSkips.movieId} = ${movieIdColumn}
   )`;
-  return sql`(${notRated} and ${notSkipped})`;
+  const notDismissed = sql`not exists (
+    select 1 from ${feedFeedback}
+    where ${feedFeedback.userId} = ${userId}::text and ${feedFeedback.movieId} = ${movieIdColumn}
+      and ${feedFeedback.kind} = 'not_interested'
+  )`;
+  return sql`(${notRated} and ${notSkipped} and ${notDismissed})`;
 }

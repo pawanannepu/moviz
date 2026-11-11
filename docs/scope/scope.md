@@ -26,10 +26,10 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 11 | Letterboxd CSV import | Slice 3 | done |
 | 12 | Movie detail page | Slice 4 | in-progress |
 | 13 | Watchlist & seen list | Slice 5 | done |
-| 14 | Feed feedback | Slice 6 | planned |
-| 15 | Bite search (mood and vibe) | Slice 7 | planned |
-| 16 | Where to watch | Slice 8 | planned |
-| 17 | Privacy & legal basics | Slice 9 | planned |
+| 14 | Feed feedback | Slice 6 | in-progress |
+| 15 | Bite search (mood and vibe) | Slice 7 | in-progress |
+| 16 | Where to watch | Slice 8 | in-progress |
+| 17 | Privacy & legal basics | Slice 9 | in-progress |
 | 18 | Accessibility pass | Slice 9 | planned |
 
 ## Foundations
@@ -205,31 +205,68 @@ spec [0002](../specs/0002-data-model/index.md) · code in `src/watchlist/`, `src
 
 ## Slice 6: Feed feedback
 
-### 14. Feed feedback · needs a decision
+### 14. Feed feedback
 Tell the feed "not interested" or "more like this" on any pick, so recommendations get better after the first visit.
 **Done when:** a user can dismiss a pick or ask for more like it, dismissed movies stay gone, and the next feed visibly reflects the feedback.
-- [ ] Design it (spec): `/architect feed feedback`
+spec [0011](../specs/0011-feed-feedback/index.md) · code in `src/feedback/`, `src/user-data/exclusions.ts`, `src/recommend/load-taste.ts`, `src/feed/feed-list.tsx`, `src/movie/load-movie-page.ts`, `drizzle/0004_feed_feedback.sql`
+- [x] Design it (spec): `/architect feed feedback`
+- [x] Build it: `/develop feed feedback`
+  - [x] Migration 4, feedback data functions, the exclusion clause, export and delete (AC-4, AC-13, AC-14)
+  - [x] Thread: "Not interested", the Hidden line and Undo on feed cards (AC-1, AC-2, AC-3, AC-12, AC-13)
+  - [x] "More like this" toggle and the recommender's feedback anchors and reason (AC-1, AC-5, AC-6, AC-7, AC-8, AC-9, AC-10)
+  - [x] Movie page controls and the kept feed (AC-11, AC-15)
+  - [x] Browser and accessibility pass (AC-1 to AC-15)
+- [ ] Verify it: `/check verify feed feedback`
+- [ ] Test it: `/test feed feedback`
 
 ## Slice 7: Bite search
 
-### 15. Bite search (mood and vibe) · needs a decision
+### 15. Bite search (mood and vibe)
 Type a short phrase like "something short and funny tonight" and get a few matching picks, shaped by the user's taste, each with a reason.
 **Done when:** a short phrase returns a small set of relevant movies the user has not rated, each with a reason; empty, slow, and failed searches are handled.
-- [ ] Design it (spec): `/architect bite search`
+spec [0012](../specs/0012-bite-search/index.md)
+- [x] Design it (spec): `/architect bite search`
+- [ ] Build it: `/develop bite search`
+  - [ ] Migration 5, the quota, export and delete (AC-3, AC-15)
+  - [ ] Thread: Voyage query embedding, scoring, the action and the `/search` page with cards (AC-1, AC-2, AC-6, AC-11, AC-14)
+  - [ ] Word rules, the "Looking for" line, the taste blend and reasons (AC-4, AC-5, AC-7, AC-8)
+  - [ ] Failure strand: words mode, time budget, quota, empty and error states, kept results (AC-3, AC-9, AC-10, AC-12, AC-13)
+  - [ ] Purge in the daily cron, privacy and browser pass (AC-15, AC-16)
+- [ ] Verify it: `/check verify bite search`
+- [ ] Test it: `/test bite search`
 
 ## Slice 8: Where to watch
 
-### 16. Where to watch · needs a decision
-Show which streaming services carry a movie in the user's country, on the detail page and feed cards.
+### 16. Where to watch
+Show which streaming services carry a movie in the user's country, on the movie detail page (feed cards are deferred).
 **Done when:** a movie shows the services that carry it for the user's country, or a clear "not found on streaming" state, and the data source is credited as required.
-- [ ] Design it (spec): `/architect where to watch`
+spec [0013](../specs/0013-where-to-watch/index.md)
+- [x] Design it (spec): `/architect where to watch`
+- [ ] Build it: `/develop where to watch`
+  - [ ] Migration 6 and the TMDB watch providers call (AC-7, AC-11)
+  - [ ] Thread: the cached read and the section on the movie page with the credit (AC-1, AC-2, AC-3, AC-4, AC-7)
+  - [ ] Country: IP default, the picker and its action (AC-5, AC-6, AC-10)
+  - [ ] Failure strand, accessibility and the browser pass (AC-8, AC-9, AC-12)
+- [ ] Verify it: `/check verify where to watch`
+- [ ] Test it: `/test where to watch`
 
 ## Slice 9: Launch readiness
 
-### 17. Privacy & legal basics · needs a decision · GA
+### 17. Privacy & legal basics · GA
 Privacy policy, terms, and the controls for personal data: export my data and delete my account.
 **Done when:** policy and terms pages are linked from sign up, a user can download their data and delete their account with all their ratings removed, and a signup consent line is present.
-- [ ] Design it (spec): `/architect privacy & legal basics`
+spec [0014](../specs/0014-privacy-legal-basics/index.md)
+- [x] Design it (spec): `/architect privacy & legal basics`
+- [ ] Build it: `/develop privacy & legal basics`
+  - [ ] Thread: policy and terms pages, footer links, sign up consent line, terms version (AC-1, AC-2, AC-3, AC-4, AC-5)
+  - [ ] Launch check on the legal details (AC-12)
+  - [ ] Account page, country and the data export (AC-6, AC-7, AC-8, AC-14)
+  - [ ] Delete account with its rate limit, and retention (AC-9, AC-10, AC-11, AC-13)
+  - [ ] Browser and accessibility pass (AC-1 to AC-14)
+- [ ] Verify it: `/check verify privacy & legal basics`
+- [ ] Test it: `/test privacy & legal basics`
+- [ ] Review it (fresh model): `/check review privacy & legal basics`
+- [ ] Document it: `/document privacy & legal basics`
 
 ### 18. Accessibility pass
 A final sweep that every screen meets WCAG AA: keyboard, screen reader labels, contrast, and focus, including swipe via buttons.
@@ -244,6 +281,8 @@ Out of scope for this build pass, kept so the plan stays honest.
 - **Native mobile app**: swipe as a native app · needs a decision
 - **Other languages**: translated interface · needs a decision
 - **Letterboxd import extras**: download unmatched rows as a CSV, undo an import, accept the full export zip, import watched and watchlist files, a progress bar for large files · needs a decision · from spec 0009
+- **Where to watch on feed cards**: small service logos on each card, needing availability synced ahead of time · needs a decision · from spec 0013
+- **Bite search with an LLM**: an LLM step that reads odd phrasing into filters, replacing the word rules · needs a decision · from spec 0012
 - **Movie detail extras**: a per user limit on the page (with launch hardening), a pending hint on card taps, Cache Components in place of the feed store · needs a decision · from spec 0010
 
 ## Legend

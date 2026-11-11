@@ -1,5 +1,7 @@
 import { POSTER_DIMENSIONS, posterUrl } from "@/catalog/images";
 import type { CatalogMovie } from "@/catalog/read/get-movie";
+import type { FeedbackKind } from "@/feedback/feedback";
+import { MovieFeedback } from "@/feedback/movie-feedback";
 import { PosterImage } from "@/ui/poster-image";
 import { SubtitleBar } from "@/ui/subtitle-bar";
 import { MovieListActions } from "@/watchlist/movie-list-actions";
@@ -24,6 +26,11 @@ type MovieDetailViewProps = {
   movie: MovieDetailMovie;
   /** The finished reason sentence, or null when the movie has none. */
   reason: string | null;
+  /**
+   * The feedback controls' first state, or null (the default) for no
+   * controls. They need `movieId` too (spec 0011, AC-11).
+   */
+  feedback?: { kind: FeedbackKind | null } | null;
   movieId?: number;
   /** The signed in user's saved and seen state for this movie. */
   listState?: { watchlisted: boolean; score: number | null };
@@ -46,7 +53,8 @@ const present = (text: string | null): text is string =>
  * placeholder and no empty heading.
  *
  * The reason sits in the same subtitle bar the feed card used, as real page
- * text, in full and with no motion. With no reason there is no bar.
+ * text, in full and with no motion. With no reason there is no bar. The
+ * feedback controls sit right under the poster and its reason (spec 0011).
  *
  * Under 1024px it is one column with a poster at most 420px wide. From 1024px
  * the poster is on the left and the text on the right (`detail-grid`).
@@ -54,6 +62,7 @@ const present = (text: string | null): text is string =>
 export function MovieDetailView({
   movie,
   reason,
+  feedback = null,
   movieId,
   listState,
   showRating = true,
@@ -68,16 +77,24 @@ export function MovieDetailView({
 
   return (
     <article data-slot="movie-detail" className="detail-grid">
-      <div className="relative overflow-hidden rounded-poster">
-        <PosterImage
-          src={posterUrl(movie.posterPath, "w500")}
-          alt={`Poster for ${movie.title}`}
-          width={width}
-          height={height}
-          title={movie.title}
-          priority
-        />
-        {reason ? <SubtitleBar>{reason}</SubtitleBar> : null}
+      <div className="flex flex-col gap-4">
+        <div className="relative overflow-hidden rounded-poster">
+          <PosterImage
+            src={posterUrl(movie.posterPath, "w500")}
+            alt={`Poster for ${movie.title}`}
+            width={width}
+            height={height}
+            title={movie.title}
+            priority
+          />
+          {reason ? <SubtitleBar>{reason}</SubtitleBar> : null}
+        </div>
+        {feedback && movieId !== undefined ? (
+          <MovieFeedback
+            movie={{ id: movieId, title: movie.title }}
+            initial={feedback.kind}
+          />
+        ) : null}
       </div>
 
       <div className="flex min-w-0 flex-col gap-6">

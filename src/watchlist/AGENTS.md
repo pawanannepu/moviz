@@ -4,13 +4,13 @@ The signed in user's saved movies and seen list. The protected page is `/lists`;
 
 ## Key files
 
-| File | Owns |
-| --- | --- |
-| `watchlist.ts` | Add and remove saved movies, and page through saved and rated movies with opaque cursors |
-| `actions.ts` | Authenticated, Zod validated Server Actions for saving, removing, and rating a movie |
-| `movie-list-actions.tsx` | Shared client controls for watchlist state and half star ratings |
-| `movie-list-card.tsx` | Movie card used by each list |
-| `src/app/(protected)/lists/` | Protected lists page and its loading and error states |
+| File                         | Owns                                                                                     |
+| ---------------------------- | ---------------------------------------------------------------------------------------- |
+| `watchlist.ts`               | Add and remove saved movies, and page through saved and rated movies with opaque cursors |
+| `actions.ts`                 | Authenticated, Zod validated Server Actions for saving, removing, and rating a movie     |
+| `movie-list-actions.tsx`     | Shared client controls for watchlist state and half star ratings                         |
+| `movie-list-card.tsx`        | Movie card used by each list                                                             |
+| `src/app/(protected)/lists/` | Protected lists page and its loading and error states                                    |
 
 ## Conventions
 

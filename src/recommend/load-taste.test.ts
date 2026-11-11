@@ -55,6 +55,7 @@ describe.skipIf(!TEST_DATABASE_URL)("loadTaste", () => {
         releaseYear: 1995,
         score: 9,
         weight: ratingWeight(9),
+        source: "rating",
       },
     ]);
   });
@@ -80,6 +81,7 @@ describe.skipIf(!TEST_DATABASE_URL)("loadTaste", () => {
       "movieId",
       "releaseYear",
       "score",
+      "source",
       "title",
       "weight",
     ]);
@@ -190,8 +192,10 @@ describe.skipIf(!TEST_DATABASE_URL)("loadTaste", () => {
     expect(taste).toEqual({
       likedCount: 0,
       dislikedCount: 0,
+      moreLikeThisCount: 0,
       liked: [],
       disliked: [],
+      moreLikeThis: [],
     });
   });
 

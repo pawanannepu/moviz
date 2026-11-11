@@ -20,6 +20,8 @@ export const EXPORT_KEY_BY_TABLE = {
   swipe_skips: "skips",
   // `import_unmatched_rows` has no `user_id`; it rides inside each import (spec 0009).
   imports: "imports",
+  watchlist_entries: "watchlist",
+  feed_feedback: "feedback",
 } as const;
 
 /** Every table in the Drizzle schema that has a `user_id` column. */

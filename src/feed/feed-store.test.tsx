@@ -26,6 +26,7 @@ const pick = (id: number): FeedPick => ({
     genres: [],
   },
   reason: `Because you loved Anchor ${id} (1990)`,
+  moreLikeThis: false,
 });
 
 const kept = (overrides: Partial<KeptFeed> = {}): KeptFeed => ({
@@ -33,6 +34,7 @@ const kept = (overrides: Partial<KeptFeed> = {}): KeptFeed => ({
   seedIds: [1, 2, 3],
   picks: [1, 2, 3, 4, 5].map(pick),
   done: false,
+  hiddenIds: [],
   ...overrides,
 });
 

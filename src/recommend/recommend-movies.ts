@@ -3,9 +3,14 @@ import type { Db, Executor } from "@/db/create-db";
 import { toDbFailure, unexpectedDbError } from "@/db/failure";
 import { err, ok, type Result } from "@/lib/result";
 import { loadPickCards } from "./load-pick-cards";
-import { loadTaste } from "./load-taste";
+import { loadTaste, positiveAnchors } from "./load-taste";
 import { popularCandidates } from "./popular-candidates";
-import { pickWithVariety, tasteStrength, varietyCap } from "./rules";
+import {
+  pickWithVariety,
+  reasonFromAnchor,
+  tasteStrength,
+  varietyCap,
+} from "./rules";
 import { scoreCandidates } from "./score-candidates";
 import type {
   Pick,
@@ -47,29 +52,26 @@ async function choosePicks(
       reason: { kind: "popular" },
     }));
 
-  if (tasteStrength(taste.likedCount) === "none") return popular();
+  if (tasteStrength(taste.likedCount + taste.moreLikeThisCount) === "none") {
+    return popular();
+  }
 
+  const positive = positiveAnchors(taste);
   const scored = await scoreCandidates(tx, {
     userId: input.userId,
-    liked: taste.liked,
+    liked: positive,
     disliked: taste.disliked,
     shown: input.shown,
   });
   // No embedded candidate at all (for example embeddings not written yet).
   if (scored.length === 0) return popular();
 
-  const anchors = new Map(taste.liked.map((a) => [a.movieId, a]));
-  const cap = varietyCap(input.limit, taste.liked.length);
+  const anchors = new Map(positive.map((a) => [a.movieId, a]));
+  const cap = varietyCap(input.limit, positive.length);
   return pickWithVariety(scored, input.limit, cap).flatMap((candidate) => {
     const anchor = anchors.get(candidate.anchorId);
     if (!anchor) return [];
-    const { weight: _weight, ...shownAnchor } = anchor;
-    return [
-      {
-        movieId: candidate.movieId,
-        reason: { kind: "similar_to_liked", anchor: shownAnchor },
-      },
-    ];
+    return [{ movieId: candidate.movieId, reason: reasonFromAnchor(anchor) }];
   });
 }
 
@@ -80,8 +82,10 @@ async function choosePicks(
  * session and, for "load more", the movie ids already shown.
  *
  * - No liked movie with an embedding: the most voted movies, reason `popular`.
- * - Otherwise: taste picks, reason `similar_to_liked`; `profile.strength` is
- *   `thin` below 5 liked movies, which only changes the flag the feed reads.
+ * - Otherwise: taste picks, reason `similar_to_liked`, or `more_like_this`
+ *   when the best anchor is a movie the user asked for more like (spec 0011);
+ *   `profile.strength` is `thin` below 5 liked movies and "More like this"
+ *   anchors together, which only changes the flag the feed reads.
  *
  * Every read runs in one read only `REPEATABLE READ` transaction, so counts,
  * anchors, scores and reasons come from one snapshot. Returns `invalid_input`
@@ -106,7 +110,8 @@ export async function recommendMovies(
         const profile: TasteProfile = {
           likedCount: taste.likedCount,
           dislikedCount: taste.dislikedCount,
-          strength: tasteStrength(taste.likedCount),
+          // "More like this" anchors count as taste (spec 0011, AC-9).
+          strength: tasteStrength(taste.likedCount + taste.moreLikeThisCount),
         };
         const chosen = await choosePicks(tx, { userId, limit, shown }, taste);
         const cards = await loadPickCards(

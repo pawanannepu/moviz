@@ -11,7 +11,9 @@ import {
   swipeSkips,
   user,
   verification,
+  watchlistEntries,
 } from "@/db/schema";
+import { setFeedback } from "@/feedback/feedback";
 import { upsertProfile } from "@/profile/profile";
 import { saveRating } from "@/ratings/save-rating";
 import { saveSwipe } from "@/ratings/save-swipe";
@@ -28,7 +30,7 @@ describe.skipIf(!TEST_DATABASE_URL)("deleteAccount (database)", () => {
   const t = useTestDb();
 
   async function seedEverything(userId: string, email: string) {
-    const [rated, skipped] = await t.fx.newMovies(2);
+    const [rated, skipped, saved, dismissed] = await t.fx.newMovies(4);
     await saveRating(t.db, {
       userId,
       movieId: rated.id,
@@ -36,13 +38,19 @@ describe.skipIf(!TEST_DATABASE_URL)("deleteAccount (database)", () => {
       source: "manual",
     });
     await saveSwipe(t.db, { userId, movieId: skipped.id, choice: "not_seen" });
+    await t.db.insert(watchlistEntries).values({ userId, movieId: saved.id });
+    await setFeedback(t.db, {
+      userId,
+      movieId: dismissed.id,
+      kind: "not_interested",
+    });
     await upsertProfile(t.db, {
       userId,
       country: "GB",
       countrySource: "user",
       termsVersion: "v1",
     });
-    const [saved] = await t.db
+    const [savedImport] = await t.db
       .insert(imports)
       .values({
         userId,
@@ -54,7 +62,7 @@ describe.skipIf(!TEST_DATABASE_URL)("deleteAccount (database)", () => {
       })
       .returning({ id: imports.id });
     await t.db.insert(importUnmatchedRows).values({
-      importId: saved.id,
+      importId: savedImport.id,
       rowNumber: 1,
       title: "Somewhere",
       year: 1999,

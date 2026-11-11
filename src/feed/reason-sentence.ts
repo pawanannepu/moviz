@@ -10,13 +10,17 @@ function verb(score: number): "loved" | "liked" | "rated" {
 
 /**
  * Words a recommender reason as one subtitle sentence (spec 0008, AC-3):
- * "Because you loved Heat (1995)", or "Popular with film fans". The verb never
+ * "Because you loved Heat (1995)", "More like Heat (1995), as you asked"
+ * (spec 0011, AC-8), or "Popular with film fans". The verb never
  * claims more than the anchor score supports. The year and its parentheses are
  * left out when the year is null. There is no full stop.
  */
 export function reasonSentence(reason: Reason): string {
   if (reason.kind === "popular") return POPULAR_REASON;
-  const { title, releaseYear, score } = reason.anchor;
+  const { title, releaseYear } = reason.anchor;
   const year = releaseYear === null ? "" : ` (${releaseYear})`;
-  return `Because you ${verb(score)} ${title}${year}`;
+  if (reason.kind === "more_like_this") {
+    return `More like ${title}${year}, as you asked`;
+  }
+  return `Because you ${verb(reason.anchor.score)} ${title}${year}`;
 }

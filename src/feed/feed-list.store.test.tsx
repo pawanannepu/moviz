@@ -15,6 +15,10 @@ import { err, ok } from "@/lib/result";
 // Load more itself; this file covers the links and the restore. It is a
 // separate file because it replaces `next/link` and needs the store provider.
 const loadMoreAction = vi.fn();
+const setFeedbackAction = vi.fn();
+vi.mock("@/feedback/actions", () => ({
+  setFeedbackAction: (...args: unknown[]) => setFeedbackAction(...args),
+}));
 vi.mock("./actions", () => ({
   loadMoreAction: (...args: unknown[]) => loadMoreAction(...args),
 }));
@@ -64,6 +68,7 @@ function pick(id: number): FeedPick {
       genres: ["Drama"],
     },
     reason: `Because you loved Anchor ${id} (1990)`,
+    moreLikeThis: false,
   };
 }
 const picks = (ids: number[]) => ids.map(pick);

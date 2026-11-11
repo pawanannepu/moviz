@@ -1,5 +1,6 @@
 import type { Db } from "@/db/create-db";
 import type { DbUnavailable } from "@/db/failure";
+import { moreLikeThisIds } from "@/feedback/feedback";
 import { err, ok, type Result } from "@/lib/result";
 import { recommendMovies } from "@/recommend/recommend-movies";
 import { MAX_SHOWN } from "@/recommend/weights";
@@ -9,7 +10,8 @@ import type { FeedBatch } from "./types";
 
 /**
  * Reads one batch of feed picks with exactly one recommender call and words
- * each reason (spec 0008). `shown` is the movie ids already on the page: empty
+ * each reason (spec 0008). One more read marks the picks the user asked for
+ * more like (spec 0011), so the button shows pressed on first render. `shown` is the movie ids already on the page: empty
  * for the first load. The caller has already checked the user, because this
  * function trusts `userId`.
  *
@@ -31,9 +33,15 @@ export async function loadFeedBatch(
     if (result.error.code === "db_unavailable") return err(result.error);
     throw new Error("The feed sent the recommender an invalid input.");
   }
+  const pressed = await moreLikeThisIds(db, {
+    userId: input.userId,
+    movieIds: result.value.picks.map((pick) => pick.movie.id),
+  });
+  if (!pressed.ok) return err(pressed.error);
   const picks = result.value.picks.map((pick) => ({
     movie: pick.movie,
     reason: reasonSentence(pick.reason),
+    moreLikeThis: pressed.value.has(pick.movie.id),
   }));
   const pageSize = new Set(input.shown).size + picks.length;
   return ok({

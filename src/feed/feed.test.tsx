@@ -44,6 +44,7 @@ const pick = (id: number): FeedPick => ({
     genres: [],
   },
   reason: "Popular with film fans",
+  moreLikeThis: false,
 });
 
 function batch(count: number, strength: "none" | "thin" | "ok", done = false) {

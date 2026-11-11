@@ -16,6 +16,11 @@ vi.mock("@/catalog/read/get-movie", () => ({
 vi.mock("@/recommend/reason-for", () => ({
   reasonFor: (...args: unknown[]) => reasonFor(...args),
 }));
+// The feedback read (spec 0011) decides whether the page shows its controls.
+const feedbackFor = vi.fn();
+vi.mock("@/feedback/feedback", () => ({
+  feedbackFor: (...args: unknown[]) => feedbackFor(...args),
+}));
 
 import { loadMoviePage } from "./load-movie-page";
 
@@ -55,6 +60,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   getMovie.mockResolvedValue(ok(movie()));
   reasonFor.mockResolvedValue(similarTo(9));
+  feedbackFor.mockResolvedValue(ok(null));
 });
 
 describe("loadMoviePage reads (AC-16, AC-17)", () => {
@@ -95,7 +101,11 @@ describe("loadMoviePage result (AC-7, AC-8)", () => {
     const result = await loadMoviePage(db, INPUT);
 
     expect(result).toEqual(
-      ok({ movie: movie(), reason: "Because you loved Heat (1995)" }),
+      ok({
+        movie: movie(),
+        reason: "Because you loved Heat (1995)",
+        feedback: { kind: null },
+      }),
     );
   });
 
@@ -132,7 +142,9 @@ describe("loadMoviePage result (AC-7, AC-8)", () => {
 
     const result = await loadMoviePage(db, INPUT);
 
-    expect(result).toEqual(ok({ movie: movie(), reason: null }));
+    expect(result).toEqual(
+      ok({ movie: movie(), reason: null, feedback: null }),
+    );
   });
 
   it("still returns a movie that has no poster", async () => {
@@ -187,7 +199,7 @@ describe("loadMoviePage failures (AC-9, AC-10, AC-16)", () => {
     reasonFor.mockResolvedValue(err({ code: "db_unavailable" }));
 
     expect(await loadMoviePage(db, INPUT)).toEqual(
-      ok({ movie: movie(), reason: null }),
+      ok({ movie: movie(), reason: null, feedback: null }),
     );
   });
 

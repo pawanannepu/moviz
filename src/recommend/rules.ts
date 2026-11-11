@@ -1,4 +1,5 @@
-import type { TasteStrength } from "./types";
+import type { TasteAnchor } from "./load-taste";
+import type { Reason, TasteStrength } from "./types";
 import {
   MIN_VARIETY_CAP,
   RATING_MIDPOINT,
@@ -18,6 +19,19 @@ export function isLikedScore(score: number): boolean {
  */
 export function ratingWeight(score: number): number {
   return (score - RATING_MIDPOINT) / RATING_SPAN;
+}
+
+/** The reason a pick carries when `anchor` is its best positive anchor (spec 0011, AC-8). */
+export function reasonFromAnchor(anchor: TasteAnchor): Reason {
+  if (anchor.source === "more_like_this") {
+    const { movieId, title, releaseYear } = anchor;
+    return { kind: "more_like_this", anchor: { movieId, title, releaseYear } };
+  }
+  const { movieId, title, releaseYear, score } = anchor;
+  return {
+    kind: "similar_to_liked",
+    anchor: { movieId, title, releaseYear, score },
+  };
 }
 
 /** `none` with no liked movie, `thin` with 1 to 4, `ok` with 5 or more (AC-7). */

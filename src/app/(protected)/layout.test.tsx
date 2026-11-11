@@ -45,7 +45,13 @@ describe("ProtectedLayout (AC-14)", () => {
       </ProtectedLayout>,
     );
     const store = seen[0];
-    const kept = { userId: "user-1", seedIds: [1], picks: [], done: false };
+    const kept = {
+      userId: "user-1",
+      seedIds: [1],
+      picks: [],
+      done: false,
+      hiddenIds: [],
+    };
 
     store.save(kept);
     store.markOpened(1);
@@ -60,7 +66,13 @@ describe("ProtectedLayout (AC-14)", () => {
         <Page key="home" />
       </ProtectedLayout>,
     );
-    seen[0].save({ userId: "user-1", seedIds: [1], picks: [], done: true });
+    seen[0].save({
+      userId: "user-1",
+      seedIds: [1],
+      picks: [],
+      done: true,
+      hiddenIds: [],
+    });
 
     view.rerender(
       <ProtectedLayout>

@@ -40,7 +40,9 @@ type ScoreRow = { movie_id: string; anchor_id: string; score: number };
  * index, which is approximate and can lose rows after the filters (spec 0002).
  * The anchors sit in a materialized CTE so each anchor vector is read once.
  * Returns at most `CANDIDATE_FETCH` rows, best first, one query however many
- * anchors there are (AC-17). Needs at least one liked anchor.
+ * anchors there are (AC-17). Needs at least one liked anchor. `liked` holds
+ * every positive anchor, rated or "More like this" (spec 0011), and a pair
+ * where the anchor is the candidate itself is skipped.
  */
 export async function scoreCandidates(
   executor: Executor,
@@ -77,6 +79,8 @@ export async function scoreCandidates(
         on ce.movie_id = ${movies.id} and ce.model = ${EMBEDDING_MODEL}
       cross join anchors a
       where ${isListable()}
+        -- An anchor never scores itself (spec 0011, AC-7).
+        and a.movie_id <> ${movies.id}
         and ${unavailableMovies(input.userId, movies.id, "feed")}
         and ${movies.id} <> all(${shown}::bigint[])
     ),

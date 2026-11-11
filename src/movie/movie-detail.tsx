@@ -28,6 +28,7 @@ export async function MovieDetail({
       movie={page.value.movie}
       movieId={movieId}
       reason={page.value.reason}
+      feedback={page.value.feedback}
       listState={{ watchlisted: false, score: null }}
     />
   );

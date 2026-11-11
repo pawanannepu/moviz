@@ -9,6 +9,7 @@ import {
   useRef,
 } from "react";
 import { HOME_PATH } from "@/auth/paths";
+import type { FeedbackKind } from "@/feedback/feedback";
 import { moviePath } from "@/movie/movie-path";
 import type { FeedPick } from "./types";
 
@@ -22,6 +23,12 @@ export type KeptFeed = {
   picks: FeedPick[];
   /** True when the list had ended. The only Load more state that is kept. */
   done: boolean;
+  /**
+   * Picks the user marked "Not interested" in this visit, on the feed or on a
+   * movie page (spec 0011, AC-15). A restore leaves them out, with no Hidden
+   * line. They stay in `picks`, so an Undo on the movie page puts them back.
+   */
+  hiddenIds: number[];
 };
 
 export type FeedStore = {
@@ -33,6 +40,12 @@ export type FeedStore = {
   read: (userId: string, seedIds: readonly number[]) => KeptFeed | null;
   /** Replaces the kept list. */
   save: (kept: KeptFeed) => void;
+  /**
+   * Applies a saved feedback change from the movie page to the kept list:
+   * hides or restores the pick, and sets its "More like this" state. The first
+   * batch ids do not change, so the restore check still matches.
+   */
+  recordFeedback: (movieId: number, kind: FeedbackKind | null) => void;
   /** Remembers the movie whose card the user just opened from the feed. */
   markOpened: (movieId: number) => void;
   clearOpened: () => void;
@@ -56,6 +69,19 @@ function createFeedStore(): FeedStore {
     save(next) {
       kept = next;
     },
+    recordFeedback(movieId, kind) {
+      if (!kept) return;
+      const others = kept.hiddenIds.filter((id) => id !== movieId);
+      kept = {
+        ...kept,
+        hiddenIds: kind === "not_interested" ? [...others, movieId] : others,
+        picks: kept.picks.map((pick) =>
+          pick.movie.id === movieId
+            ? { ...pick, moreLikeThis: kind === "more_like_this" }
+            : pick,
+        ),
+      };
+    },
     markOpened(movieId) {
       opened = movieId;
     },
@@ -72,6 +98,7 @@ function createFeedStore(): FeedStore {
 const EMPTY_STORE: FeedStore = {
   read: () => null,
   save: () => undefined,
+  recordFeedback: () => undefined,
   markOpened: () => undefined,
   clearOpened: () => undefined,
   opened: null,

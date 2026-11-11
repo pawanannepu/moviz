@@ -10,13 +10,22 @@ export type Anchor = {
   score: number;
 };
 
+/** A movie the user asked for more like (spec 0011). It has no rating. */
+export type FeedbackAnchor = {
+  movieId: number;
+  title: string;
+  releaseYear: number | null;
+};
+
 /**
  * Why a movie was picked. `similar_to_liked` names the liked movie it is close
- * to. `popular` means there was no taste signal to use. The feed words the
+ * to. `more_like_this` names the movie the user asked for more like.
+ * `popular` means there was no taste signal to use. The feed words the
  * sentence from `anchor.score`, so a mild 6 is not called a favorite.
  */
 export type Reason =
   | { kind: "similar_to_liked"; anchor: Anchor }
+  | { kind: "more_like_this"; anchor: FeedbackAnchor }
   | { kind: "popular" };
 
 /** One recommended movie, shaped so it can go straight into a feed card. */

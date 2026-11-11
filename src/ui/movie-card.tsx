@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import {
   POSTER_DIMENSIONS,
   type PosterSize,
@@ -28,12 +29,18 @@ export type MovieCardProps = {
    * so only a client component can set it.
    */
   onNavigate?: () => void;
+  /**
+   * Buttons shown under the meta line, such as the feed's feedback controls
+   * (spec 0011, AC-1). They must sit above the stretched link (`relative z-10`)
+   * so a press never opens the movie.
+   */
+  controls?: ReactNode;
 };
 
 /**
  * A movie as a poster frame, then its title and a small meta line. The poster
  * is the card: there is no box around it. DOM order is poster, reason, title,
- * meta. With `href`, the title is the link and the whole card is clickable
+ * meta, then any `controls`. With `href`, the title is the link and the whole card is clickable
  * (spec 0004, AC-8). The link never prefetches: a feed holds hundreds of
  * cards, and most are never opened (spec 0010, AC-12). It has no server only
  * imports, so it renders on the server or inside a client component such as
@@ -45,6 +52,7 @@ export function MovieCard({
   href,
   posterSize = "w342",
   onNavigate,
+  controls,
 }: MovieCardProps) {
   const { width, height } = POSTER_DIMENSIONS[posterSize];
   const meta = movieMeta(movie);
@@ -81,6 +89,7 @@ export function MovieCard({
         </h3>
         {meta ? <p className="type-small">{meta}</p> : null}
       </div>
+      {controls}
     </article>
   );
 }

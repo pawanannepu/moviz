@@ -12,6 +12,11 @@ vi.mock("@/recommend/recommend-movies", () => ({
   recommendMovies: (...args: unknown[]) => recommendMovies(...args),
 }));
 
+// Which picks are pressed "More like this" is one more read (spec 0011).
+vi.mock("@/feedback/feedback", () => ({
+  moreLikeThisIds: async () => ({ ok: true, value: new Set<number>() }),
+}));
+
 import { FEED_BATCH_SIZE } from "./constants";
 import { loadFeedBatch } from "./load-feed-batch";
 

@@ -9,6 +9,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ back: vi.fn() }) }));
 
 // The view can also show the watchlist controls, whose Server Actions reach
 // the database. They are a boundary, so they are replaced here.
+vi.mock("@/feedback/actions", () => ({ setFeedbackAction: vi.fn() }));
 vi.mock("@/watchlist/actions", () => ({
   addToWatchlistAction: vi.fn(),
   removeFromWatchlistAction: vi.fn(),

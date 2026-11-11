@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { HOME_PATH, SIGN_IN_PATH } from "@/auth/paths";
+import type { FeedbackKind } from "@/feedback/feedback";
+import { FeedbackControls } from "@/feedback/feedback-controls";
 import { moviePath } from "@/movie/movie-path";
 import { FeedItem } from "@/ui/feed-item";
 import { LoadMoreBar, type LoadMoreState } from "@/ui/load-more-bar";
@@ -35,6 +37,12 @@ const SIGN_IN_AGAIN = `${SIGN_IN_PATH}?returnTo=${encodeURIComponent(HOME_PATH)}
  * card the user opened. Of the Load more states only `done` is kept: a list
  * left while loading or failed comes back ready to press again.
  *
+ * Each card carries the feedback controls (spec 0011). "Not interested" swaps
+ * the card for the Hidden line with Undo in the same grid cell, and Undo puts
+ * the card back; focus follows to the new control. "More like this" only
+ * changes the button. Hidden picks stay in `picks`, so their ids still go out
+ * with Load more, and a restore leaves them out with no Hidden line (AC-15).
+ *
  * Next.js runs Server Actions from one client one at a time, so `pending` is
  * the only guard against a double press.
  */
@@ -50,14 +58,48 @@ export function FeedList({ userId, initialPicks, initialDone }: FeedListProps) {
   const [state, setState] = useState<LoadMoreState>(() =>
     (store.read(userId, seedIds)?.done ?? initialDone) ? "done" : "idle",
   );
+  // Hidden before this list mounted (a restore): left out, no Hidden line.
+  const [dropped] = useState(
+    () => new Set(store.read(userId, seedIds)?.hiddenIds ?? []),
+  );
+  // Hidden while this list is on screen: the cell shows the Hidden line.
+  const [hiddenNow, setHiddenNow] = useState<ReadonlySet<number>>(new Set());
+  // The cell that just swapped between card and Hidden line takes focus.
+  const [focusId, setFocusId] = useState<number | null>(null);
   const [announcement, setAnnouncement] = useState("");
   const listRef = useRef<HTMLUListElement>(null);
 
   // Keep the store current. On a first visit, or after the ratings changed the
   // first batch, this replaces whatever list was kept before.
   useEffect(() => {
-    store.save({ userId, seedIds, picks, done: state === "done" });
-  }, [store, userId, seedIds, picks, state]);
+    store.save({
+      userId,
+      seedIds,
+      picks,
+      done: state === "done",
+      hiddenIds: [...dropped, ...hiddenNow],
+    });
+  }, [store, userId, seedIds, picks, state, dropped, hiddenNow]);
+
+  function feedbackSaved(movieId: number, kind: FeedbackKind | null) {
+    setPicks((current) =>
+      current.map((pick) =>
+        pick.movie.id === movieId
+          ? { ...pick, moreLikeThis: kind === "more_like_this" }
+          : pick,
+      ),
+    );
+    const wasHidden = hiddenNow.has(movieId);
+    if (kind === "not_interested" || wasHidden) {
+      setHiddenNow((current) => {
+        const next = new Set(current);
+        if (kind === "not_interested") next.add(movieId);
+        else next.delete(movieId);
+        return next;
+      });
+      setFocusId(movieId);
+    }
+  }
 
   // After a restore, put focus on the card the user opened, which also brings
   // it into view. Then forget it, so the next visit does not move focus.
@@ -103,16 +145,41 @@ export function FeedList({ userId, initialPicks, initialDone }: FeedListProps) {
   return (
     <>
       <ul ref={listRef} className="feed-grid">
-        {picks.map((pick) => (
-          <li key={pick.movie.id} data-movie-id={pick.movie.id}>
-            <FeedItem
-              movie={pick.movie}
-              reason={pick.reason}
-              href={moviePath(pick.movie.id)}
-              onNavigate={() => store.markOpened(pick.movie.id)}
-            />
-          </li>
-        ))}
+        {picks
+          .filter((pick) => !dropped.has(pick.movie.id))
+          .map((pick) => {
+            const id = pick.movie.id;
+            const controls = (
+              <FeedbackControls
+                movie={pick.movie}
+                kind={
+                  hiddenNow.has(id)
+                    ? "not_interested"
+                    : pick.moreLikeThis
+                      ? "more_like_this"
+                      : null
+                }
+                onSaved={(kind) => feedbackSaved(id, kind)}
+                onAnnounce={setAnnouncement}
+                focusOnMount={focusId === id}
+              />
+            );
+            return (
+              <li key={id} data-movie-id={id}>
+                {hiddenNow.has(id) ? (
+                  controls
+                ) : (
+                  <FeedItem
+                    movie={pick.movie}
+                    reason={pick.reason}
+                    href={moviePath(id)}
+                    onNavigate={() => store.markOpened(id)}
+                    controls={controls}
+                  />
+                )}
+              </li>
+            );
+          })}
       </ul>
       <LoadMoreBar
         state={state}

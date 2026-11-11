@@ -7,9 +7,9 @@ import { toDbFailure, unexpectedDbError } from "@/db/failure";
 import { movies } from "@/db/schema";
 import { err, ok, type Result } from "@/lib/result";
 import { unavailableMovies } from "@/user-data/exclusions";
-import { loadTaste, type TasteAnchor } from "./load-taste";
+import { loadTaste, positiveAnchors, type TasteAnchor } from "./load-taste";
 import { pgArray } from "./pg-array";
-import { tasteStrength } from "./rules";
+import { reasonFromAnchor, tasteStrength } from "./rules";
 import type { Reason, RecommendError } from "./types";
 
 const inputSchema = z.object({
@@ -61,6 +61,8 @@ async function bestAnchorId(
       on ae.movie_id = a.movie_id and ae.model = ${EMBEDDING_MODEL}
     join movie_embeddings me
       on me.movie_id = ${movieId}::bigint and me.model = ${EMBEDDING_MODEL}
+    -- The page's own movie is never its anchor (spec 0011, AC-7).
+    where a.movie_id <> ${movieId}::bigint
     order by a.weight * (1 - (me.embedding <=> ae.embedding)) desc,
       a.movie_id asc
     limit 1
@@ -80,7 +82,9 @@ async function bestAnchorId(
  *   movie has no embedding.
  * - Otherwise `similar_to_liked`, naming the liked anchor with the largest
  *   `weight * similarity`, ties to the lower movie id, from the same capped
- *   anchors the feed uses.
+ *   anchors the feed uses, or `more_like_this` when that anchor is a movie
+ *   the user asked for more like (spec 0011). The page's own movie is never
+ *   its anchor.
  *
  * The caller passes the user id from the live session. At most four reads, in
  * one read only `REPEATABLE READ` transaction, whatever the rating count.
@@ -102,16 +106,16 @@ export async function reasonFor(
         if (!(await canHaveReason(tx, { userId, movieId }))) return null;
 
         const taste = await loadTaste(tx, userId);
-        if (tasteStrength(taste.likedCount) === "none") {
-          return { kind: "popular" };
-        }
+        const strength = tasteStrength(
+          taste.likedCount + taste.moreLikeThisCount,
+        );
+        if (strength === "none") return { kind: "popular" };
 
-        const anchorId = await bestAnchorId(tx, movieId, taste.liked);
-        const anchor = taste.liked.find((a) => a.movieId === anchorId);
+        const positive = positiveAnchors(taste);
+        const anchorId = await bestAnchorId(tx, movieId, positive);
+        const anchor = positive.find((a) => a.movieId === anchorId);
         if (!anchor) return { kind: "popular" };
-
-        const { weight: _weight, ...shownAnchor } = anchor;
-        return { kind: "similar_to_liked", anchor: shownAnchor };
+        return reasonFromAnchor(anchor);
       },
       { accessMode: "read only", isolationLevel: "repeatable read" },
     );

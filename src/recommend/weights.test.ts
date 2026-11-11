@@ -7,7 +7,7 @@ import * as weights from "./weights";
  * visible in review.
  */
 describe("recommender constants", () => {
-  it("match the values written in spec 0007", () => {
+  it("match the values written in spec 0007 and spec 0011", () => {
     expect({ ...weights }).toEqual({
       RATING_MIDPOINT: 5.5,
       RATING_SPAN: 4.5,
@@ -16,6 +16,8 @@ describe("recommender constants", () => {
       PRIOR_FULL_VOTES: 5000,
       LIKED_ANCHORS: 30,
       DISLIKED_ANCHORS: 10,
+      MORE_LIKE_THIS_ANCHORS: 10,
+      MORE_LIKE_THIS_WEIGHT: 1.0,
       THIN_BELOW: 5,
       MIN_VARIETY_CAP: 3,
       CANDIDATE_FETCH: 300,
