@@ -24,6 +24,11 @@ export async function MovieDetail({
     return <MovieLoadError />;
   }
   return (
-    <MovieDetailView movie={page.value.movie} reason={page.value.reason} />
+    <MovieDetailView
+      movie={page.value.movie}
+      movieId={movieId}
+      reason={page.value.reason}
+      listState={{ watchlisted: false, score: null }}
+    />
   );
 }

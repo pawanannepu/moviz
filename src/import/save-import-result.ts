@@ -13,6 +13,7 @@ import {
   profiles,
   ratings,
   swipeSkips,
+  watchlistEntries,
 } from "@/db/schema";
 import { err, ok, type Result } from "@/lib/result";
 import { MIN_RATED } from "@/onboarding/deck-rules";
@@ -251,6 +252,15 @@ export async function saveImportResult(
             eq(swipeSkips.userId, userId),
             inArray(
               swipeSkips.movieId,
+              part.map((r) => r.movieId),
+            ),
+          ),
+        );
+        await tx.delete(watchlistEntries).where(
+          and(
+            eq(watchlistEntries.userId, userId),
+            inArray(
+              watchlistEntries.movieId,
               part.map((r) => r.movieId),
             ),
           ),

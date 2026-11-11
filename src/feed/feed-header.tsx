@@ -14,6 +14,12 @@ export function FeedHeader() {
         Moviz
       </Link>
       <div className="flex flex-wrap items-center gap-x-6">
+        <Link
+          href="/lists"
+          className="inline-flex min-h-11 items-center text-muted-foreground underline-offset-8 hover:text-foreground"
+        >
+          My lists
+        </Link>
         <ImportLink />
         <SignOutButton />
       </div>

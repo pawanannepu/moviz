@@ -423,3 +423,77 @@ test.describe("the design page (AC-20)", () => {
     ).toEqual([]);
   });
 });
+
+test.describe("keyboard and requests (AC-12, AC-15, AC-18)", () => {
+  test("Tab reaches the skip link, the header and Back to picks in order, and the skip link moves focus to main", async ({
+    page,
+    request,
+  }) => {
+    await openFeed(page, request, "movie-tab");
+    const id = await items(page).first().getAttribute("data-movie-id");
+    await page.goto(`/movie/${id}`);
+    await expect(detail(page)).toBeVisible({ timeout: COLD_START_MS });
+
+    // What the page offers, in visual order: every link and button in `main`
+    // down to the back link. The header may gain links; the order must hold.
+    const offered = await page.evaluate(() => {
+      const names = [...document.querySelectorAll("main a, main button")].map(
+        (element) => element.textContent?.trim() ?? "",
+      );
+      return names.slice(0, names.indexOf("Back to picks") + 1);
+    });
+    expect(offered.slice(0, 1)).toEqual(["Moviz"]);
+    expect(offered).toContain("Sign out");
+    expect(offered.at(-1)).toBe("Back to picks");
+
+    const stops: { name: string; height: number }[] = [];
+    for (let step = 0; step < offered.length + 1; step++) {
+      await page.keyboard.press("Tab");
+      stops.push(
+        await page.evaluate(() => {
+          const element = document.activeElement as HTMLElement;
+          return {
+            name: element.textContent?.trim() ?? "",
+            height: Math.round(element.getBoundingClientRect().height),
+          };
+        }),
+      );
+    }
+
+    // Tab order follows visual order, with the skip link first.
+    expect(stops.map((stop) => stop.name)).toEqual([
+      "Skip to content",
+      ...offered,
+    ]);
+    // Every target after the skip link is at least 44px high.
+    for (const stop of stops.slice(1)) {
+      expect(stop.height, stop.name).toBeGreaterThanOrEqual(44);
+    }
+    await page.reload();
+    await expect(detail(page)).toBeVisible({ timeout: COLD_START_MS });
+    await page.keyboard.press("Tab");
+    await page.keyboard.press("Enter");
+    await expect(page.locator("main#main-content")).toBeFocused();
+  });
+
+  test("scrolling and hovering the feed asks for no movie page", async ({
+    page,
+    request,
+  }) => {
+    await openFeed(page, request, "movie-noprefetch");
+    const asked: string[] = [];
+    page.on("request", (sent) => {
+      if (new URL(sent.url()).pathname.startsWith("/movie/")) {
+        asked.push(sent.url());
+      }
+    });
+
+    await items(page).last().scrollIntoViewIfNeeded();
+    await items(page).nth(12).hover();
+    await items(page).first().scrollIntoViewIfNeeded();
+    await items(page).first().hover();
+    await page.waitForLoadState("networkidle");
+
+    expect(asked).toEqual([]);
+  });
+});

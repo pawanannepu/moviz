@@ -9,6 +9,7 @@ import { LoadMoreDemo } from "@/ui/design/load-more-demo";
 import { MovieDetailDemo, SAMPLE_DETAIL } from "@/ui/design/movie-detail-demo";
 import { SwipeDemo } from "@/ui/design/swipe-demo";
 import { ToastDemo } from "@/ui/design/toast-demo";
+import { WatchlistDemo } from "@/ui/design/watchlist-demo";
 import { FeedItem } from "@/ui/feed-item";
 import { Field } from "@/ui/field";
 import { loadHeroPick } from "@/ui/landing/load-hero-pick";
@@ -375,6 +376,14 @@ export default async function DesignPage() {
         note="One movie in full. One column with a poster up to 420px wide, then two columns from 1024px. The reason sits on the poster in full, with no motion. A fact that is missing is left out."
       >
         <MovieDetailDemo movie={detail} />
+      </Section>
+
+      <Section
+        id="watchlist"
+        title="Watchlist and seen list"
+        note="Save a movie for later, remove it, or give it a half star rating to mark it seen."
+      >
+        <WatchlistDemo />
       </Section>
 
       <Section

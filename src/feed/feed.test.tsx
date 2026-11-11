@@ -18,9 +18,14 @@ vi.mock("./load-feed-batch", () => ({
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
 // The list has its own tests: here it only shows what it was given.
 vi.mock("./feed-list", () => ({
-  FeedList: (props: { initialPicks: unknown[]; initialDone: boolean }) => (
+  FeedList: (props: {
+    userId: string;
+    initialPicks: unknown[];
+    initialDone: boolean;
+  }) => (
     <div
       data-testid="feed-list"
+      data-user={props.userId}
       data-count={props.initialPicks.length}
       data-done={String(props.initialDone)}
     />
@@ -83,6 +88,18 @@ describe("Feed picks (AC-2, AC-13)", () => {
     const list = screen.getByTestId("feed-list");
     expect(list.getAttribute("data-count")).toBe("5");
     expect(list.getAttribute("data-done")).toBe("true");
+  });
+});
+
+describe("Feed and the feed store (spec 0010, AC-14)", () => {
+  it("hands the signed in user's id to the list, which keys the kept list on it", async () => {
+    loadFeedBatch.mockResolvedValue(batch(3, "ok"));
+
+    await showFeed();
+
+    expect(screen.getByTestId("feed-list").getAttribute("data-user")).toBe(
+      "user-1",
+    );
   });
 });
 

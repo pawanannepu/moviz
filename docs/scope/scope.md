@@ -25,7 +25,7 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 10 | Product analytics & error monitoring | Slice 2 | dropped |
 | 11 | Letterboxd CSV import | Slice 3 | done |
 | 12 | Movie detail page | Slice 4 | in-progress |
-| 13 | Watchlist & seen list | Slice 5 | planned |
+| 13 | Watchlist & seen list | Slice 5 | done |
 | 14 | Feed feedback | Slice 6 | planned |
 | 15 | Bite search (mood and vibe) | Slice 7 | planned |
 | 16 | Where to watch | Slice 8 | planned |
@@ -190,14 +190,18 @@ spec [0010](../specs/0010-movie-detail-page/index.md) · code in `src/movie/`, `
   - [x] The feed keeps its place: the store, restore and focus, and "Back to picks" (AC-13, AC-14, AC-15)
   - [x] Accessibility, `design.md`, the `/design` page and the browser pass (AC-18, AC-20)
 - [ ] Verify it: `/check verify movie detail page`
-- [ ] Test it: `/test movie detail page`
+- [x] Test it: `/test movie detail page`
 
 ## Slice 5: Watchlist and seen
 
-### 13. Watchlist & seen list
+### 13. Watchlist & seen list · done
 Save movies for later, mark ones you have watched, and rate them. Ratings feed back into the taste profile.
 **Done when:** a user can add or remove a movie from the watchlist, mark it seen with a rating, see both lists, and the feed stops showing movies they have seen.
-- [ ] Build it: `/develop watchlist & seen list`
+spec [0002](../specs/0002-data-model/index.md) · code in `src/watchlist/`, `src/ratings/`, `src/app/(protected)/lists/`, `src/movie/`
+- [x] Build it: `/develop watchlist & seen list`
+  - [x] Migration 3 and the watchlist / seen data functions
+  - [x] Add, remove, rate, and list page actions
+  - [x] Apply migration 3 and confirm the live schema
 
 ## Slice 6: Feed feedback
 

@@ -7,7 +7,7 @@ import {
   toDbFailure,
   type UserNotFound,
 } from "@/db/failure";
-import { ratings, swipeSkips } from "@/db/schema";
+import { ratings, swipeSkips, watchlistEntries } from "@/db/schema";
 import { err, ok, type Result } from "@/lib/result";
 
 export type Rating = typeof ratings.$inferSelect;
@@ -60,6 +60,14 @@ export async function saveRating(
         .delete(swipeSkips)
         .where(
           and(eq(swipeSkips.userId, userId), eq(swipeSkips.movieId, movieId)),
+        );
+      await tx
+        .delete(watchlistEntries)
+        .where(
+          and(
+            eq(watchlistEntries.userId, userId),
+            eq(watchlistEntries.movieId, movieId),
+          ),
         );
       return row;
     });

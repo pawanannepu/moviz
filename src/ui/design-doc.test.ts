@@ -89,6 +89,21 @@ describe("design.md (AC-2)", () => {
     expect(doc).toContain("**Personalized feed**");
   });
 
+  it.each([
+    "MovieDetailView",
+    "MovieDetailSkeleton",
+    "MovieNotFound",
+    "BackToPicks",
+  ])("describes the movie detail component %s (spec 0010, AC-20)", (name) => {
+    expect(doc).toContain(`**${name}**`);
+  });
+
+  it("holds the movie detail wireframe and names its layout utility (spec 0010, AC-20)", () => {
+    expect(doc).toContain("**Movie detail**");
+    expect(doc).toContain("`detail-grid`");
+    expect(doc).toContain("Back to picks");
+  });
+
   it("lists the same color values the CSS defines", () => {
     const css = readFileSync(
       join(process.cwd(), "src/app/globals.css"),

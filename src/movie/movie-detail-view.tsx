@@ -2,6 +2,7 @@ import { POSTER_DIMENSIONS, posterUrl } from "@/catalog/images";
 import type { CatalogMovie } from "@/catalog/read/get-movie";
 import { PosterImage } from "@/ui/poster-image";
 import { SubtitleBar } from "@/ui/subtitle-bar";
+import { MovieListActions } from "@/watchlist/movie-list-actions";
 import { CAST_TITLE, DIRECTED_BY } from "./constants";
 import { castLines, detailMeta, directorNames } from "./format";
 
@@ -23,6 +24,10 @@ type MovieDetailViewProps = {
   movie: MovieDetailMovie;
   /** The finished reason sentence, or null when the movie has none. */
   reason: string | null;
+  movieId?: number;
+  /** The signed in user's saved and seen state for this movie. */
+  listState?: { watchlisted: boolean; score: number | null };
+  showRating?: boolean;
   /**
    * The level of the title heading. 1 on the movie page, where the title is
    * the page's one `h1`. The `/design` page passes 3 to fit under its own
@@ -49,6 +54,9 @@ const present = (text: string | null): text is string =>
 export function MovieDetailView({
   movie,
   reason,
+  movieId,
+  listState,
+  showRating = true,
   headingLevel = 1,
 }: MovieDetailViewProps) {
   const Title = headingLevel === 1 ? "h1" : "h3";
@@ -119,6 +127,14 @@ export function MovieDetailView({
               ))}
             </ul>
           </section>
+        ) : null}
+        {listState && movieId !== undefined ? (
+          <MovieListActions
+            movieId={movieId}
+            watchlisted={listState.watchlisted}
+            score={listState.score}
+            showRating={showRating}
+          />
         ) : null}
       </div>
     </article>

@@ -13,6 +13,7 @@ import {
   ratings,
   swipeSkips,
   user,
+  watchlistEntries,
 } from "@/db/schema";
 import { err, ok, type Result } from "@/lib/result";
 
@@ -51,6 +52,12 @@ export type UserExport = {
     source: "swipe" | "import" | "manual";
     ratedAt: string;
     updatedAt: string;
+  }[];
+  watchlist: {
+    movieId: number;
+    title: string;
+    year: number | null;
+    addedAt: string;
   }[];
   skips: {
     movieId: number;
@@ -144,6 +151,21 @@ export async function exportUserData(
           .where(eq(swipeSkips.userId, userId))
           .orderBy(desc(swipeSkips.skippedAt), desc(swipeSkips.movieId));
 
+        const watchlistRows = await tx
+          .select({
+            movieId: watchlistEntries.movieId,
+            title: movies.title,
+            year: movies.releaseYear,
+            addedAt: watchlistEntries.addedAt,
+          })
+          .from(watchlistEntries)
+          .innerJoin(movies, eq(movies.id, watchlistEntries.movieId))
+          .where(eq(watchlistEntries.userId, userId))
+          .orderBy(
+            desc(watchlistEntries.addedAt),
+            desc(watchlistEntries.movieId),
+          );
+
         const importRows = await tx
           .select()
           .from(imports)
@@ -202,6 +224,12 @@ export async function exportUserData(
             title: row.title,
             year: row.year,
             skippedAt: iso(row.skippedAt),
+          })),
+          watchlist: watchlistRows.map((row) => ({
+            movieId: row.movieId,
+            title: row.title,
+            year: row.year,
+            addedAt: iso(row.addedAt),
           })),
           imports: importRows.map((row) => ({
             id: row.id,

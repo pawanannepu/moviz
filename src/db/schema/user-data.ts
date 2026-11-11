@@ -83,6 +83,24 @@ export const ratings = pgTable(
   ],
 );
 
+/** A movie saved to watch later. A matching rating removes this row. */
+export const watchlistEntries = pgTable(
+  "watchlist_entries",
+  {
+    userId: userId(),
+    movieId: movieId(),
+    addedAt: timestamptz("added_at").defaultNow().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.movieId] }),
+    index("watchlist_user_added_idx").on(
+      t.userId,
+      t.addedAt.desc().nullsFirst(),
+      t.movieId.desc().nullsFirst(),
+    ),
+  ],
+);
+
 export const swipeSkips = pgTable(
   "swipe_skips",
   {

@@ -103,6 +103,7 @@ MCP servers: Neon (recommended, connect it yourself, use read only mode on produ
 - [src/feed/AGENTS.md](src/feed/AGENTS.md): the personalized feed on `/home`, reason sentences, Load more, its focus and error rules
 - [src/onboarding/AGENTS.md](src/onboarding/AGENTS.md): the swipe onboarding deck, its rules, Server Actions and the `/home` gate
 - [src/recommend/AGENTS.md](src/recommend/AGENTS.md): the taste recommender, how a pick is scored, its reasons, and how its database tests share one branch
+- [src/watchlist/AGENTS.md](src/watchlist/AGENTS.md): watchlist and seen list data, actions, and page behavior
 - [src/ui/AGENTS.md](src/ui/AGENTS.md): design tokens, primitives, movie and feed cards, the swipe card, page states, the landing hero and the `/design` page
 
 _Drafted by /audit from the repo, worth a quick human pass. Edit freely: once a line stops matching this draft, later runs treat it as curated and will flag rather than overwrite it._

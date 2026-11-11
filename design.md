@@ -149,6 +149,16 @@ The page of one movie, `/movie/[id]` ([spec 0010](docs/specs/0010-movie-detail-p
 - **BackToPicks** (`back-to-picks.tsx`): a quiet Dust link with a left arrow, 44px high, above the poster. It is always a real link to `/home`. When the movie was opened from the feed, it steps back in history instead, so the feed shows where the user left it.
 - The load error uses ErrorState with the words "We couldn't load this movie." The header and the back link stay above it.
 
+### Watchlist and seen list (`src/watchlist/`)
+
+The protected `/lists` page puts the watchlist first and the seen list second. It keeps the same left aligned page container and feed grid, with a short promise line, one headline, and anchor links to each list. Each movie sits in a Curtain panel with its poster, title, year, and the action that fits its state. A watchlist movie can be removed or rated. A seen movie shows its rating and can be updated. Each list pages independently with a clear next page link.
+
+The movie detail page also offers the same save and rating controls, so a film can move into either list from its own page.
+
+- **MovieListActions** (`movie-list-actions.tsx`): a 44px watchlist button and a labelled half star selector with a save button. The yellow primary button means save for later. Errors use Exit and a live alert; success uses a polite status line. A rating moves the movie to seen.
+- **MovieListCard** (`movie-list-card.tsx`): a `w342` poster and linked title inside a Curtain panel, followed by its state actions.
+- Empty list panels invite the next step. The loading page uses static poster skeletons. A failed read offers a retry.
+
 ### States (`src/ui/states/`)
 
 - **EmptyState**: title, body and an optional action link.
@@ -251,6 +261,27 @@ Phone first. Wider layouts keep the same composition.
 | ---------------------- |
 | Al Pacino as Vincent.. |    Two columns from 1024px. The page order is the
 +------------------------+    same at both sizes. No reason, no bar.
+```
+
+**Your lists** (`/lists`, two independently paged lists)
+
+```
+360 wide                         1280 wide
++------------------------+       +------------------------------------------------+
+| Moviz  My lists Import |       | Moviz                       My lists Import   |
+| Your lists             |       | Your lists                                      |
+| Keep your plans close  |       | Keep your plans close                           |
+| [Watchlist] [Seen]     |       | [Watchlist] [Seen]                              |
+| Watchlist              |       | Watchlist                                       |
+| +--------------------+ |       | +-------------+   +-------------+               |
+| | poster  Heat       | |       | | poster Heat |   | poster Dune |               |
+| |         1995       | |       | | 1995        |   | 2021        |               |
+| | [Remove] [Rating]  | |       | | [Remove]... |   | [Remove]... |               |
+| +--------------------+ |       | +-------------+   +-------------+               |
+| [Next page]            |       | [Next page]                                     |
+| Seen and rated         |       | Seen and rated                                  |
+| ...                    |       | ...                                             |
++------------------------+       +------------------------------------------------+
 ```
 
 ## Rules for new screens

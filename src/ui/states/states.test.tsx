@@ -29,6 +29,35 @@ describe("ErrorState (AC-14)", () => {
   });
 });
 
+describe("ErrorState title level (spec 0010, AC-18)", () => {
+  it("makes the title an h2 by default", () => {
+    render(
+      <ErrorState title="Couldn't load" body="Try again." onRetry={vi.fn()} />,
+    );
+
+    expect(
+      screen.getByRole("heading", { level: 2, name: "Couldn't load" }),
+    ).toBeTruthy();
+    expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
+  });
+
+  it("makes the title the h1 when the page has no other heading", () => {
+    render(
+      <ErrorState
+        title="Couldn't load"
+        body="Try again."
+        onRetry={vi.fn()}
+        titleAs="h1"
+      />,
+    );
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Couldn't load" }),
+    ).toBeTruthy();
+    expect(screen.queryByRole("heading", { level: 2 })).toBeNull();
+  });
+});
+
 describe("EmptyState (AC-14)", () => {
   it("shows its action as a link", () => {
     render(
