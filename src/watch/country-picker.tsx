@@ -92,16 +92,20 @@ export function CountryPicker({
     }
     setStatus("idle");
     startTransition(async () => {
-      const result = await save({ country: selected });
-      if (!result.ok) {
-        setStatus(
-          result.error.code === "unauthenticated" ? "session_ended" : "error",
-        );
-        return;
+      try {
+        const result = await save({ country: selected });
+        if (!result.ok) {
+          setStatus(
+            result.error.code === "unauthenticated" ? "session_ended" : "error",
+          );
+          return;
+        }
+        focusAfterRefresh.current = true;
+        setOpen(false);
+        startTransition(() => router.refresh());
+      } catch {
+        setStatus("error");
       }
-      focusAfterRefresh.current = true;
-      setOpen(false);
-      startTransition(() => router.refresh());
     });
   }
 

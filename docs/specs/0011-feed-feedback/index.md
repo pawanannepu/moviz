@@ -1,7 +1,7 @@
 # 0011. Feed feedback: "Not interested" hides a pick, "More like this" adds it as a taste anchor
 
 **Date**: 2026-11-11
-**Status**: In Progress
+**Status**: Accepted
 
 ## Summary
 

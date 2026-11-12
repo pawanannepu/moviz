@@ -14,15 +14,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A default deny route guard (`src/proxy.ts`). A signed out visitor who opens a page that is not on the public list goes to `/sign-in` and returns to that page after signing in. A protected `/api/*` path answers 401 with JSON. Pages still check the real session on the server, so a stale cookie never causes a redirect loop.
 - A Cloudflare Turnstile bot check on sign up and reset requests, and per address rate limits stored in Postgres (sign in 5 a minute, sign up 3, reset request 3, resend verification 1). A limited person sees "Too many attempts. Try again in N seconds."
 - Email sending through Resend for verification, reset and "you already have an account" messages. In local development the links print to the server console instead.
-- Deleting an account through Better Auth now needs the current password and clears the token rows first. No screen for it ships yet.
+- Deleting your account from `/account` requires your current password, clears the token rows first, and removes associated user data.
 - Auth events are logged as structured lines (sign up, email confirmed, sign in, sign out, reset requested, reset completed, account deleted) with no email, password, token or address in them.
 - A separate browser test suite for sign in: run `pnpm exec playwright test -c playwright.auth.config.ts`. It builds the app and uses Cloudflare's always pass test keys, so it works even when `.env.local` holds a real key.
+- Public `/privacy` and `/terms` pages explain Moviz's data practices and terms. They are linked from the site footer and sign up page, and signing up requires accepting the current Terms and records which version you accepted (see spec 0014).
+- The signed in `/account` page lets you set your country and download a JSON export of your data, including daily search counts but not search phrases (see spec 0014).
 
 ### Changed
 
 - New environment names. `BETTER_AUTH_SECRET` is now required. `BETTER_AUTH_URL` is required except on Vercel previews. `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` are required. `RESEND_API_KEY` and `EMAIL_FROM` are required on Vercel previews and production, and the app refuses to start without them. Existing deployments need these set before they build.
 - The landing page (`/`) now sends a signed in visitor to `/home`, and it renders on each request instead of refreshing once an hour.
 - A profile created by the fallback path now carries the terms version and the time it was accepted, so no account is left without them.
+- Production Vercel builds now require the operator name, contact email, and backup retention period used in the legal pages. Local and preview builds can use placeholders (see spec 0014).
 
 ### Security
 

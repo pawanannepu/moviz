@@ -1,7 +1,7 @@
 # 0014. Privacy and legal basics: GDPR style policy and terms, an account page to export and delete, and a launch check on the legal details
 
 **Date**: 2026-11-12
-**Status**: In Progress
+**Status**: Accepted
 
 ## Summary
 

@@ -26,11 +26,11 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 11 | Letterboxd CSV import | Slice 3 | done |
 | 12 | Movie detail page | Slice 4 | in-progress |
 | 13 | Watchlist & seen list | Slice 5 | done |
-| 14 | Feed feedback | Slice 6 | in-progress |
-| 15 | Bite search (mood and vibe) | Slice 7 | in-progress |
+| 14 | Feed feedback | Slice 6 | done |
+| 15 | Bite search (mood and vibe) | Slice 7 | done |
 | 16 | Where to watch | Slice 8 | in-progress |
-| 17 | Privacy & legal basics | Slice 9 | in-progress |
-| 18 | Accessibility pass | Slice 9 | in-progress |
+| 17 | Privacy & legal basics | Slice 9 | done |
+| 18 | Accessibility pass | Slice 9 | done |
 
 ## Foundations
 
@@ -178,7 +178,7 @@ spec [0009](../specs/0009-letterboxd-csv-import/index.md) · code in `src/import
 
 ## Slice 4: Movie detail
 
-### 12. Movie detail page
+### 12. Movie detail page · in-progress
 A page per movie with poster, synopsis, cast, year, genres, and why it was recommended when you arrive from the feed.
 **Done when:** tapping a feed card opens the detail page, it works on phone and desktop, and an unknown movie shows a not found state.
 spec [0010](../specs/0010-movie-detail-page/index.md) · code in `src/movie/`, `src/app/(protected)/movie/`, `src/recommend/reason-for.ts`, `src/feed/feed-store.tsx`
@@ -205,7 +205,7 @@ spec [0002](../specs/0002-data-model/index.md) · code in `src/watchlist/`, `src
 
 ## Slice 6: Feed feedback
 
-### 14. Feed feedback
+### 14. Feed feedback · done
 Tell the feed "not interested" or "more like this" on any pick, so recommendations get better after the first visit.
 **Done when:** a user can dismiss a pick or ask for more like it, dismissed movies stay gone, and the next feed visibly reflects the feedback.
 spec [0011](../specs/0011-feed-feedback/index.md) · code in `src/feedback/`, `src/user-data/exclusions.ts`, `src/recommend/load-taste.ts`, `src/feed/feed-list.tsx`, `src/movie/load-movie-page.ts`, `drizzle/0004_feed_feedback.sql`
@@ -221,7 +221,7 @@ spec [0011](../specs/0011-feed-feedback/index.md) · code in `src/feedback/`, `s
 
 ## Slice 7: Bite search
 
-### 15. Bite search (mood and vibe)
+### 15. Bite search (mood and vibe) · done
 Type a short phrase like "something short and funny tonight" and get a few matching picks, shaped by the user's taste, each with a reason.
 **Done when:** a short phrase returns a small set of relevant movies the user has not rated, each with a reason; empty, slow, and failed searches are handled.
 spec [0012](../specs/0012-bite-search/index.md) · code in `src/search/`, `src/app/(protected)/search/`, `src/user-data/purge-old-rows.ts`
@@ -237,7 +237,7 @@ spec [0012](../specs/0012-bite-search/index.md) · code in `src/search/`, `src/a
 
 ## Slice 8: Where to watch
 
-### 16. Where to watch
+### 16. Where to watch · in-progress
 Show which streaming services carry a movie in the user's country, on the movie detail page (feed cards are deferred).
 **Done when:** a movie shows the services that carry it for the user's country, or a clear "not found on streaming" state, and the data source is credited as required.
 spec [0013](../specs/0013-where-to-watch/index.md) · code in `src/watch/`
@@ -248,11 +248,11 @@ spec [0013](../specs/0013-where-to-watch/index.md) · code in `src/watch/`
   - [x] Country: IP default, the picker and its action (AC-5, AC-6, AC-10)
   - [x] Failure strand, accessibility and the browser pass (AC-8, AC-9, AC-12)
 - [ ] Verify it: `/check verify where to watch`
-- [ ] Test it: `/test where to watch`
+- [x] Test it: `/test where to watch`
 
 ## Slice 9: Launch readiness
 
-### 17. Privacy & legal basics · GA
+### 17. Privacy & legal basics · done · GA
 Privacy policy, terms, and the controls for personal data: export my data and delete my account.
 **Done when:** policy and terms pages are linked from sign up, a user can download their data and delete their account with all their ratings removed, and a signup consent line is present.
 spec [0014](../specs/0014-privacy-legal-basics/index.md) · code in `src/legal/`, `src/account/`
@@ -265,10 +265,10 @@ spec [0014](../specs/0014-privacy-legal-basics/index.md) · code in `src/legal/`
   - [x] Browser and accessibility pass (AC-1 to AC-14)
 - [x] Verify it: `/check verify privacy & legal basics`
 - [x] Test it: `/test privacy & legal basics`
-- [ ] Review it (fresh model): `/check review privacy & legal basics`
-- [ ] Document it: `/document privacy & legal basics`
+- [x] Review it (fresh model): `/check review privacy & legal basics`
+- [x] Document it: `/document privacy & legal basics`
 
-### 18. Accessibility pass
+### 18. Accessibility pass · done
 A final sweep that every screen meets WCAG AA: keyboard, screen reader labels, contrast, and focus, including swipe via buttons.
 **Done when:** every screen can be used with keyboard only, passes an automated accessibility scan, and swipe actions have labelled button equivalents.
 code in `e2e/auth/accessibility.spec.ts`, `src/app/not-found.tsx`, `src/watchlist/`, `src/app/(protected)/lists/`
