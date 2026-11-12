@@ -234,3 +234,74 @@ describe("loadMoviePage failures (AC-9, AC-10, AC-16)", () => {
     await expect(loadMoviePage(db, INPUT)).rejects.toThrow("boom");
   });
 });
+
+describe("loadMoviePage feedback controls (spec 0011, AC-11)", () => {
+  it("reads the feedback once, for the session user and this movie", async () => {
+    await loadMoviePage(db, INPUT);
+
+    expect(feedbackFor).toHaveBeenCalledTimes(1);
+    expect(feedbackFor).toHaveBeenCalledWith(db, INPUT);
+  });
+
+  it("shows the controls unpressed for a movie the feed could show", async () => {
+    const result = await loadMoviePage(db, INPUT);
+
+    expect(result.ok && result.value.feedback).toEqual({ kind: null });
+  });
+
+  it("shows the controls pressed for a movie marked more like this", async () => {
+    feedbackFor.mockResolvedValue(ok("more_like_this"));
+
+    const result = await loadMoviePage(db, INPUT);
+
+    expect(result.ok && result.value.feedback).toEqual({
+      kind: "more_like_this",
+    });
+  });
+
+  it("shows the hidden state for a movie marked not interested, which has no reason", async () => {
+    reasonFor.mockResolvedValue(ok(null));
+    feedbackFor.mockResolvedValue(ok("not_interested"));
+
+    const result = await loadMoviePage(db, INPUT);
+
+    expect(result).toEqual(
+      ok({
+        movie: movie(),
+        reason: null,
+        feedback: { kind: "not_interested" },
+      }),
+    );
+  });
+
+  it("shows no controls for a movie with no reason and no hide (rated, skipped, not listable)", async () => {
+    reasonFor.mockResolvedValue(ok(null));
+
+    const result = await loadMoviePage(db, INPUT);
+
+    expect(result.ok && result.value.feedback).toBeNull();
+  });
+
+  it("shows no controls when the feedback read fails, and the movie still shows", async () => {
+    feedbackFor.mockResolvedValue(err({ code: "db_unavailable" }));
+
+    const result = await loadMoviePage(db, INPUT);
+
+    expect(result).toEqual(
+      ok({
+        movie: movie(),
+        reason: "Because you loved Heat (1995)",
+        feedback: null,
+      }),
+    );
+  });
+
+  it("shows no controls when the reason read fails", async () => {
+    reasonFor.mockResolvedValue(err({ code: "db_unavailable" }));
+    feedbackFor.mockResolvedValue(ok("not_interested"));
+
+    const result = await loadMoviePage(db, INPUT);
+
+    expect(result.ok && result.value.feedback).toBeNull();
+  });
+});

@@ -19,7 +19,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "catalog:seed": "tsx --env-file=.env.local scripts/catalog-seed.ts",
-    "embed:catalog": "tsx --env-file=.env.local scripts/embed-catalog.ts"
+    "embed:catalog": "tsx --env-file=.env.local scripts/embed-catalog.ts",
+    "watch:regions": "tsx --env-file=.env.local scripts/watch-regions.ts"
   },
   "dependencies": {
     "better-auth": "^1.7.18",

@@ -17,6 +17,7 @@ import { setFeedback } from "@/feedback/feedback";
 import { upsertProfile } from "@/profile/profile";
 import { saveRating } from "@/ratings/save-rating";
 import { saveSwipe } from "@/ratings/save-swipe";
+import { consumeSearchQuota } from "@/search/quota";
 import {
   TEST_DATABASE_URL,
   token,
@@ -69,6 +70,7 @@ describe.skipIf(!TEST_DATABASE_URL)("deleteAccount (database)", () => {
       score: 8,
       reason: "no_match",
     });
+    await consumeSearchQuota(t.db, { userId });
     await t.db.insert(account).values({
       id: `acct-${token()}`,
       accountId: userId,

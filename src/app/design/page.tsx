@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import type { MovieDetailMovie } from "@/movie/movie-detail-view";
+import { biteReasonSentence } from "@/search/reason-sentence";
 import { ErrorStateDemo } from "@/ui/design/error-state-demo";
 import { ImportDemo } from "@/ui/design/import-demo";
 import { isDesignPageHidden } from "@/ui/design/is-design-page-hidden";
@@ -10,6 +11,7 @@ import { MovieDetailDemo, SAMPLE_DETAIL } from "@/ui/design/movie-detail-demo";
 import { SwipeDemo } from "@/ui/design/swipe-demo";
 import { ToastDemo } from "@/ui/design/toast-demo";
 import { WatchlistDemo } from "@/ui/design/watchlist-demo";
+import { WhereToWatchDemo } from "@/ui/design/where-to-watch-demo";
 import { FeedItem } from "@/ui/feed-item";
 import { Field } from "@/ui/field";
 import { loadHeroPick } from "@/ui/landing/load-hero-pick";
@@ -18,6 +20,7 @@ import { MovieCardSkeleton } from "@/ui/movie-card-skeleton";
 import { Button } from "@/ui/primitives/button";
 import { EmptyState } from "@/ui/states/empty-state";
 import { LoadingState } from "@/ui/states/loading-state";
+import { countryOptions } from "@/watch/regions";
 
 export const metadata: Metadata = {
   title: "Design system · Moviz",
@@ -330,6 +333,45 @@ export default async function DesignPage() {
       </Section>
 
       <Section
+        id="bite-search"
+        title="Bite search card"
+        note="A search result is a feed item with the search reason: close to a liked movie, the phrase alone, and the words mode reason. A long phrase is cut to 40 characters. Search cards carry no feedback buttons."
+      >
+        <ul className="feed-grid">
+          {[
+            {
+              movie: first,
+              reason: biteReasonSentence({
+                kind: "bite_vibe",
+                phrase: "a slow moody thriller from the 90s",
+                anchor: { movieId: 0, title: "Heat", releaseYear: 1995 },
+              }),
+            },
+            {
+              movie: second,
+              reason: biteReasonSentence({
+                kind: "bite_vibe",
+                phrase: "something short and funny tonight",
+                anchor: null,
+              }),
+            },
+            {
+              movie: third,
+              reason: biteReasonSentence({
+                kind: "bite_words",
+                phrase:
+                  "a feel good classic for a rainy Sunday with the whole family",
+              }),
+            },
+          ].map((item) => (
+            <li key={item.movie.id}>
+              <FeedItem movie={item.movie} reason={item.reason} />
+            </li>
+          ))}
+        </ul>
+      </Section>
+
+      <Section
         id="skeleton"
         title="Skeleton"
         note="Static placeholders. Nothing pulses."
@@ -376,6 +418,14 @@ export default async function DesignPage() {
         note="One movie in full. One column with a poster up to 420px wide, then two columns from 1024px. The reason sits on the poster in full, with no motion. A fact that is missing is left out."
       >
         <MovieDetailDemo movie={detail} />
+      </Section>
+
+      <Section
+        id="where-to-watch"
+        title="Where to watch"
+        note="On the movie page, after the synopsis. Services grouped as Stream, Free, Rent and Buy, each name as text beside its logo, with the JustWatch credit. Save on this page never stores anything."
+      >
+        <WhereToWatchDemo options={countryOptions()} />
       </Section>
 
       <Section

@@ -12,6 +12,7 @@ import {
   movies,
   profiles,
   ratings,
+  searchUsage,
   swipeSkips,
   user,
   watchlistEntries,
@@ -97,6 +98,8 @@ export type UserExport = {
         | "kept_manual";
     }[];
   }[];
+  /** Bite searches per UTC day (`YYYY-MM-DD`), newest first. Never a phrase (spec 0012, AC-15). */
+  searchUsage: { day: string; count: number }[];
 };
 
 export type ExportUserDataError = UserNotFound | DbUnavailable;
@@ -210,6 +213,12 @@ export async function exportUserData(
                   importUnmatchedRows.rowNumber,
                 );
 
+        const searchUsageRows = await tx
+          .select({ day: searchUsage.day, count: searchUsage.count })
+          .from(searchUsage)
+          .where(eq(searchUsage.userId, userId))
+          .orderBy(desc(searchUsage.day));
+
         const document: UserExport = {
           schemaVersion: 1,
           exportedAt: iso(new Date()),
@@ -278,6 +287,7 @@ export async function exportUserData(
                 reason: unmatched.reason,
               })),
           })),
+          searchUsage: searchUsageRows,
         };
         return document;
       },

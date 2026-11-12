@@ -1,0 +1,91 @@
+{
+  "id": 949,
+  "results": {
+    "US": {
+      "link": "https://www.themoviedb.org/movie/949-heat/watch?locale=US",
+      "flatrate": [
+        {
+          "logo_path": "/max.jpg",
+          "provider_id": 1899,
+          "provider_name": "Max",
+          "display_priority": 7
+        },
+        {
+          "logo_path": "/netflix.jpg",
+          "provider_id": 8,
+          "provider_name": "Netflix",
+          "display_priority": 0
+        }
+      ],
+      "free": [
+        {
+          "logo_path": "/tubi.jpg",
+          "provider_id": 73,
+          "provider_name": "Tubi TV",
+          "display_priority": 30
+        }
+      ],
+      "ads": [
+        {
+          "logo_path": "/tubi.jpg",
+          "provider_id": 73,
+          "provider_name": "Tubi TV",
+          "display_priority": 12
+        },
+        {
+          "logo_path": "/pluto.jpg",
+          "provider_id": 300,
+          "provider_name": "Pluto TV",
+          "display_priority": 40
+        }
+      ],
+      "rent": [
+        {
+          "logo_path": "/apple.jpg",
+          "provider_id": 2,
+          "provider_name": "Apple TV",
+          "display_priority": 4
+        },
+        {
+          "logo_path": "/amazon.jpg",
+          "provider_id": 10,
+          "provider_name": "Amazon Video",
+          "display_priority": 4
+        }
+      ],
+      "buy": [
+        {
+          "logo_path": "/apple.jpg",
+          "provider_id": 2,
+          "provider_name": "Apple TV",
+          "display_priority": 4
+        }
+      ]
+    },
+    "fr": {
+      "link": "https://www.themoviedb.org/movie/949-heat/watch?locale=FR",
+      "flatrate": [
+        {
+          "logo_path": null,
+          "provider_id": 381,
+          "provider_name": "Canal+",
+          "display_priority": 2
+        }
+      ]
+    },
+    "GB": {
+      "buy": [{ "provider_id": 2, "provider_name": "Apple TV" }]
+    },
+    "419": {
+      "link": "https://example.test/latam",
+      "flatrate": [
+        {
+          "logo_path": "/x.jpg",
+          "provider_id": 9,
+          "provider_name": "Region code, not a country",
+          "display_priority": 1
+        }
+      ]
+    }
+  }
+}

@@ -564,4 +564,82 @@ describe.skipIf(!TEST_DATABASE_URL)("scoreCandidates", () => {
 
     expect(rows.map((row) => row.movieId)).toEqual(candidateIds);
   });
+
+  describe("More like this anchors (spec 0011)", () => {
+    const askedAnchor = (movieId: number): TasteAnchor => ({
+      movieId,
+      title: "asked",
+      releaseYear: null,
+      weight: 1,
+      source: "more_like_this",
+    });
+
+    it("AC-7: never scores an anchor against itself, so its own movie is not named as its anchor", async () => {
+      const user = await ctx.fx.newUser();
+      const [asked, close] = await fx.addMovies([
+        { vector: vec([[A, 1]]) },
+        { vector: near(A, 0.9, 140) },
+      ]);
+      mine = new Set([asked, close]);
+
+      const rows = await scoreMine({
+        userId: user.id,
+        liked: [askedAnchor(asked)],
+        disliked: [],
+        shown: [],
+      });
+
+      expect(rows.find((row) => row.movieId === asked)).toBeUndefined();
+      expect(rows.find((row) => row.movieId === close)?.anchorId).toBe(asked);
+      expect(rows.find((row) => row.movieId === close)?.score).toBeGreaterThan(
+        0.85,
+      );
+    });
+
+    it("AC-7: keeps the anchor's own movie as a candidate, ranked by the other anchors", async () => {
+      const { userId, anchors, candidateIds } = await setup(
+        [{ vector: vec([[B, 1]]), score: 9 }],
+        [{ vector: near(B, 0.6, 141) }],
+      );
+      const [asked] = candidateIds;
+
+      const rows = await scoreMine({
+        userId,
+        liked: [...anchors, askedAnchor(asked)],
+        disliked: [],
+        shown: [],
+      });
+
+      const own = rows.find((row) => row.movieId === asked);
+      expect(own?.anchorId).toBe(anchors[0].movieId);
+      expect(own?.score).toBeLessThan(0.7);
+    });
+
+    it("AC-6: lets a More like this anchor at weight 1 outrank a rated 9 for its neighbours", async () => {
+      const { userId, anchors, candidateIds } = await setup(
+        [{ vector: vec([[B, 1]]), score: 9 }],
+        [
+          { vector: vec([[A, 1]]) },
+          // Equally close to both anchors, so the stronger pull wins.
+          {
+            vector: vec([
+              [A, 0.6],
+              [B, 0.6],
+              [142, Math.sqrt(1 - 0.72)],
+            ]),
+          },
+        ],
+      );
+      const [asked, middle] = candidateIds;
+
+      const rows = await scoreMine({
+        userId,
+        liked: [...anchors, askedAnchor(asked)],
+        disliked: [],
+        shown: [],
+      });
+
+      expect(rows.find((row) => row.movieId === middle)?.anchorId).toBe(asked);
+    });
+  });
 });

@@ -1,7 +1,7 @@
 # 0013. Where to watch: TMDB watch providers on the movie page, cached a day, for the user's country
 
 **Date**: 2026-11-12
-**Status**: Proposed
+**Status**: In Progress
 
 ## Summary
 

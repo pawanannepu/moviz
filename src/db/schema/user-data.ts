@@ -3,6 +3,7 @@ import {
   bigint,
   char,
   check,
+  date,
   index,
   integer,
   pgEnum,
@@ -213,4 +214,20 @@ export const feedFeedback = pgTable(
       t.createdAt.desc().nullsFirst(),
     ),
   ],
+);
+
+/**
+ * How many bite searches a user ran on one UTC day (spec 0002, AC-11; spec 0012).
+ * `day` is always set in SQL from `(now() at time zone 'utc')::date`, never from
+ * a client clock. The cap of 30 is enforced in the upsert's `WHERE`, not by a
+ * check constraint. No table stores the phrase or the results.
+ */
+export const searchUsage = pgTable(
+  "search_usage",
+  {
+    userId: userId(),
+    day: date("day", { mode: "string" }).notNull(),
+    count: integer("count").notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.day] })],
 );

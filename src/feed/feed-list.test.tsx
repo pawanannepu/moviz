@@ -410,6 +410,142 @@ describe("FeedList failures (AC-10)", () => {
   });
 });
 
+describe("FeedList feedback (spec 0011, AC-1 to AC-3, AC-5)", () => {
+  beforeEach(() => {
+    setFeedbackAction.mockImplementation(async ({ kind }: { kind: unknown }) =>
+      ok({ kind }),
+    );
+  });
+  const button = (name: string) => screen.getByRole("button", { name });
+  const cell = (id: number) =>
+    document.querySelector(`li[data-movie-id="${id}"]`) as HTMLElement;
+
+  it("gives every card both controls, and the title link still opens the movie", () => {
+    render(
+      <FeedList
+        userId="user-1"
+        initialPicks={picks([1, 2])}
+        initialDone={false}
+      />,
+    );
+
+    for (const id of [1, 2]) {
+      expect(button(`More like this: Movie ${id}`)).toBeTruthy();
+      expect(button(`Not interested in Movie ${id}`)).toBeTruthy();
+      expect(
+        screen.getByRole("link", { name: `Movie ${id}` }).getAttribute("href"),
+      ).toBe(`/movie/${id}`);
+    }
+  });
+
+  it("shows the server's pressed state on first render", () => {
+    const pressed = { ...pick(2), moreLikeThis: true };
+    render(
+      <FeedList
+        userId="user-1"
+        initialPicks={[pick(1), pressed]}
+        initialDone={false}
+      />,
+    );
+
+    expect(button("More like this: Movie 1").getAttribute("aria-pressed")).toBe(
+      "false",
+    );
+    expect(button("More like this: Movie 2").getAttribute("aria-pressed")).toBe(
+      "true",
+    );
+  });
+
+  it("swaps a hidden card for the Hidden line in the same cell, focuses Undo and announces", async () => {
+    render(
+      <FeedList
+        userId="user-1"
+        initialPicks={picks([1, 2, 3])}
+        initialDone={false}
+      />,
+    );
+
+    await act(async () => fireEvent.click(button("Not interested in Movie 2")));
+
+    expect(listedIds()).toHaveLength(3);
+    expect(cell(2).textContent).toContain("Hidden from your picks.");
+    expect(cell(2).querySelector("a")).toBeNull();
+    expect(document.activeElement).toBe(button("Undo hiding Movie 2"));
+    expect(announcement()).toBe("Movie 2 hidden from your picks");
+  });
+
+  it("puts the card back in place on Undo, with its reason, unpressed, and focus on Not interested", async () => {
+    const pressed = { ...pick(2), moreLikeThis: true };
+    render(
+      <FeedList
+        userId="user-1"
+        initialPicks={[pick(1), pressed, pick(3)]}
+        initialDone={false}
+      />,
+    );
+    await act(async () => fireEvent.click(button("Not interested in Movie 2")));
+
+    await act(async () => fireEvent.click(button("Undo hiding Movie 2")));
+
+    expect(cell(2).textContent).toContain("Because you loved Anchor 2 (1990)");
+    expect(button("More like this: Movie 2").getAttribute("aria-pressed")).toBe(
+      "false",
+    );
+    expect(document.activeElement).toBe(button("Not interested in Movie 2"));
+    expect(announcement()).toBe("Movie 2 is back in your picks");
+  });
+
+  it("toggles More like this without changing any pick on the page", async () => {
+    render(
+      <FeedList
+        userId="user-1"
+        initialPicks={picks([1, 2, 3])}
+        initialDone={false}
+      />,
+    );
+    const before = listedIds();
+
+    await act(async () => fireEvent.click(button("More like this: Movie 1")));
+
+    expect(button("More like this: Movie 1").getAttribute("aria-pressed")).toBe(
+      "true",
+    );
+    expect(listedIds()).toEqual(before);
+    expect(announcement()).toBe("More like Movie 1 on your next picks");
+  });
+
+  it("leaves the card alone when the save fails", async () => {
+    setFeedbackAction.mockResolvedValue(err({ code: "db_unavailable" }));
+    render(
+      <FeedList
+        userId="user-1"
+        initialPicks={picks([1])}
+        initialDone={false}
+      />,
+    );
+
+    await act(async () => fireEvent.click(button("Not interested in Movie 1")));
+
+    expect(cell(1).textContent).not.toContain("Hidden from your picks.");
+    expect(screen.getByRole("alert").textContent).toBe(
+      "Could not save. Try again.",
+    );
+  });
+
+  it("has no accessibility violations with a hidden cell on the page", async () => {
+    const { container } = render(
+      <FeedList
+        userId="user-1"
+        initialPicks={picks([1, 2])}
+        initialDone={false}
+      />,
+    );
+    await act(async () => fireEvent.click(button("Not interested in Movie 1")));
+
+    expect(await axeViolations(container)).toEqual([]);
+  });
+});
+
 describe("FeedList accessibility (AC-15)", () => {
   it("has no WCAG A or AA violations when loaded", async () => {
     const { container } = render(

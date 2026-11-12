@@ -10,6 +10,8 @@ import {
 
 type MovieListActionsProps = {
   movieId: number;
+  /** The movie title, so each card's controls on a list get their own name. */
+  title?: string;
   watchlisted: boolean;
   score: number | null;
   compact?: boolean;
@@ -33,6 +35,7 @@ function actionMessage(code: string): string {
 /** Watchlist and half star rating controls shared by movie pages and lists. */
 export function MovieListActions({
   movieId,
+  title,
   watchlisted: initialWatchlisted,
   score: initialScore,
   compact = false,
@@ -105,9 +108,17 @@ export function MovieListActions({
     });
   }
 
+  // On a list page every card has these controls, so each is a named group
+  // rather than one more region landmark with the same name.
+  const Wrapper = compact ? "div" : "section";
   return (
-    <section
-      aria-label="Your movie list actions"
+    <Wrapper
+      role={compact ? "group" : undefined}
+      aria-label={
+        compact && title
+          ? `List actions for ${title}`
+          : "Your movie list actions"
+      }
       aria-busy={pending}
       className={`flex flex-col items-start gap-3 ${compact ? "" : "border-card border-t pt-5"}`}
     >
@@ -116,7 +127,6 @@ export function MovieListActions({
           <Button
             type="button"
             variant={watchlisted ? "secondary" : "primary"}
-            aria-pressed={watchlisted}
             aria-disabled={pending || disabled || undefined}
             onClick={() => !pending && !disabled && toggleWatchlist()}
           >
@@ -131,7 +141,6 @@ export function MovieListActions({
                 : `Your rating: ${score / 2} stars`}
             </span>
             <select
-              aria-label="Movie rating in half star steps"
               className="min-h-11 rounded-control border border-input bg-card px-3 text-foreground"
               value={selectedScore}
               onChange={(event) => setSelectedScore(event.currentTarget.value)}
@@ -169,6 +178,6 @@ export function MovieListActions({
       >
         {pending ? "Saving your movie…" : error || message}
       </p>
-    </section>
+    </Wrapper>
   );
 }

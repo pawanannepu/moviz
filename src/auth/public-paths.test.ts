@@ -9,6 +9,8 @@ describe("isPublicPath (AC-8)", () => {
     "/forgot-password",
     "/reset-password",
     "/verify-email",
+    "/privacy",
+    "/terms",
     "/design",
     "/design/anything",
     "/api/auth/sign-in/email",

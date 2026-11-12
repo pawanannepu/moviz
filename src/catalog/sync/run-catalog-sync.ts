@@ -23,6 +23,8 @@ export type CatalogSyncDeps = Omit<SyncDeps, "deadline"> & {
   /** Replaceable for tests. Receives one JSON line, counts and ids only. */
   log?: (line: string) => void;
   warn?: (line: string) => void;
+  /** Extra counts for the run's log line, such as the cron's `purged` (spec 0012, AC-16). */
+  logFields?: Record<string, unknown>;
 };
 
 export type CatalogSyncFailure = { code: AbortCode; summary: RunSummary };
@@ -79,6 +81,6 @@ export async function runCatalogSync(
       `catalog sync: oldest movie is ${oldest.value} days old (limit ${STALE_WARNING_DAYS})`,
     );
   }
-  log(JSON.stringify({ event: "catalog_sync", ...summary }));
+  log(JSON.stringify({ event: "catalog_sync", ...summary, ...deps.logFields }));
   return ok(summary);
 }

@@ -52,7 +52,7 @@ export default async function ListsPage({ searchParams }: PageProps<"/lists">) {
   return (
     <>
       <FeedHeader />
-      <main className="page-container flex flex-col gap-10 py-8">
+      <div className="page-container flex flex-col gap-10 py-8">
         <header className="flex flex-col gap-3">
           <h1 className="type-headline">Your lists</h1>
           <p className="max-w-[62ch] text-muted-foreground">
@@ -178,7 +178,7 @@ export default async function ListsPage({ searchParams }: PageProps<"/lists">) {
             </section>
           </>
         )}
-      </main>
+      </div>
     </>
   );
 }

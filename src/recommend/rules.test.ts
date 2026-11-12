@@ -4,6 +4,7 @@ import {
   pickWithVariety,
   type Ranked,
   ratingWeight,
+  reasonFromAnchor,
   tasteStrength,
   varietyCap,
 } from "./rules";
@@ -199,5 +200,38 @@ describe("pickWithVariety", () => {
     const ranked = [{ movieId: 1, anchorId: 2, score: 0.5, note: "kept" }];
 
     expect(pickWithVariety(ranked, 1, 3)[0].note).toBe("kept");
+  });
+});
+
+describe("reasonFromAnchor (spec 0011, AC-8)", () => {
+  it("names a rated anchor as similar_to_liked, with the score and no weight", () => {
+    expect(
+      reasonFromAnchor({
+        movieId: 1,
+        title: "Heat",
+        releaseYear: 1995,
+        score: 9,
+        weight: 0.78,
+        source: "rating",
+      }),
+    ).toEqual({
+      kind: "similar_to_liked",
+      anchor: { movieId: 1, title: "Heat", releaseYear: 1995, score: 9 },
+    });
+  });
+
+  it("names a More like this anchor as more_like_this, with no score and no weight", () => {
+    expect(
+      reasonFromAnchor({
+        movieId: 2,
+        title: "Ronin",
+        releaseYear: null,
+        weight: 1,
+        source: "more_like_this",
+      }),
+    ).toEqual({
+      kind: "more_like_this",
+      anchor: { movieId: 2, title: "Ronin", releaseYear: null },
+    });
   });
 });

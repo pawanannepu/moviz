@@ -28,3 +28,16 @@ export function posterUrl(
   const path = posterPath.startsWith("/") ? posterPath : `/${posterPath}`;
   return `${IMAGE_BASE_URL}${size}${path}`;
 }
+
+/** Width and height of a TMDB `w92` provider logo, which is square. */
+export const PROVIDER_LOGO_SIZE = 92;
+
+/**
+ * The TMDB `w92` address for a streaming service's logo, or null when it has
+ * none. Hotlinked like posters (spec 0013, AC-2).
+ */
+export function providerLogoUrl(logoPath: string | null): string | null {
+  if (logoPath === null || logoPath.trim() === "") return null;
+  const path = logoPath.startsWith("/") ? logoPath : `/${logoPath}`;
+  return `${IMAGE_BASE_URL}w92${path}`;
+}

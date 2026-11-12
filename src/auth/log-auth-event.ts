@@ -1,4 +1,7 @@
-/** The auth events that get a log line (spec 0005, AC-16). */
+/**
+ * The auth events that get a log line (spec 0005, AC-16). `data_exported` is
+ * the account data download (spec 0014, AC-7).
+ */
 export type AuthEventName =
   | "sign_up"
   | "email_verified"
@@ -6,7 +9,8 @@ export type AuthEventName =
   | "sign_out"
   | "reset_requested"
   | "reset_completed"
-  | "account_deleted";
+  | "account_deleted"
+  | "data_exported";
 
 export type AuthEvent = {
   event: AuthEventName;

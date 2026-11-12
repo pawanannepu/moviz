@@ -5,7 +5,12 @@ import {
   requestJson,
 } from "@/catalog/http/request-json";
 import { err, ok, type Result } from "@/lib/result";
-import { type TmdbMovieDetails, tmdbMovieDetailsSchema } from "./schemas";
+import {
+  type TmdbMovieDetails,
+  type TmdbWatchProviders,
+  tmdbMovieDetailsSchema,
+  tmdbWatchProvidersSchema,
+} from "./schemas";
 
 /**
  * Thin TMDB client (spec 0003, AC-15, AC-16). Every response is parsed with Zod,
@@ -50,6 +55,10 @@ export type RequestOptions = {
    * to the time left. Omit for no time limit.
    */
   deadline?: number;
+  /** Timeout per try. Defaults to `REQUEST_TIMEOUT_MS`. */
+  timeoutMs?: number;
+  /** Total tries. Defaults to `MAX_ATTEMPTS` (3). */
+  maxAttempts?: number;
 };
 
 type QueryValue = string | number | boolean;
@@ -67,6 +76,14 @@ export type TmdbClient = {
     tmdbId: number,
     options?: RequestOptions,
   ): Promise<Result<TmdbMovieDetails, TmdbError>>;
+  /**
+   * Where a movie can be watched, every country at once (spec 0013, AC-7). The
+   * data is JustWatch's, so wherever it is shown the JustWatch credit is too.
+   */
+  getWatchProviders(
+    tmdbId: number,
+    options?: RequestOptions,
+  ): Promise<Result<TmdbWatchProviders, TmdbError>>;
 };
 
 function toTmdbError(failure: HttpFailure): TmdbError {
@@ -106,7 +123,8 @@ export function createTmdbClient(options: TmdbClientOptions): TmdbClient {
           Accept: "application/json",
         },
         schema,
-        timeoutMs: REQUEST_TIMEOUT_MS,
+        timeoutMs: requestOptions.timeoutMs ?? REQUEST_TIMEOUT_MS,
+        maxAttempts: requestOptions.maxAttempts,
         deadline: requestOptions.deadline,
       },
       options,
@@ -124,6 +142,13 @@ export function createTmdbClient(options: TmdbClientOptions): TmdbClient {
           append_to_response: "credits,alternative_titles",
         },
         tmdbMovieDetailsSchema,
+        requestOptions,
+      ),
+    getWatchProviders: (tmdbId, requestOptions) =>
+      get(
+        `/movie/${tmdbId}/watch/providers`,
+        {},
+        tmdbWatchProvidersSchema,
         requestOptions,
       ),
   };

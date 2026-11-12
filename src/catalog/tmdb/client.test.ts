@@ -196,3 +196,84 @@ describe("getGenreNames", () => {
     expect(result).toEqual({ ok: true, value: ["Drama", "Action"] });
   });
 });
+
+describe("getWatchProviders (spec 0013, AC-7)", () => {
+  const body = {
+    id: 949,
+    results: {
+      US: {
+        link: "https://www.themoviedb.org/movie/949-heat/watch?locale=US",
+        flatrate: [
+          {
+            provider_id: 8,
+            provider_name: "Netflix",
+            logo_path: "/n.jpg",
+            display_priority: 0,
+          },
+        ],
+      },
+    },
+  };
+
+  it("asks for the movie's watch providers with no query", async () => {
+    const fetchMock = vi.fn(async () => answer(body));
+
+    const result = await client(
+      fetchMock as unknown as typeof fetch,
+    ).getWatchProviders(949);
+
+    expect(result).toEqual({ ok: true, value: body });
+    const url = new URL(String((fetchMock.mock.calls[0] as unknown[])[0]));
+    expect(url.pathname).toBe("/3/movie/949/watch/providers");
+    expect([...url.searchParams.keys()]).toEqual([]);
+  });
+
+  it("makes one try when asked for one, instead of the usual three", async () => {
+    const fetchMock = vi.fn(async () => new Response("{}", { status: 503 }));
+
+    const result = await client(
+      fetchMock as unknown as typeof fetch,
+    ).getWatchProviders(949, { maxAttempts: 1, timeoutMs: 4000 });
+
+    expect(result).toEqual({
+      ok: false,
+      error: { code: "tmdb_unavailable", status: 503 },
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("passes its own timeout to each try, and keeps 10 seconds otherwise", async () => {
+    const timeout = vi.spyOn(AbortSignal, "timeout");
+    const fetchMock = vi.fn(async () => answer(body));
+    const tmdb = client(fetchMock as unknown as typeof fetch);
+
+    await tmdb.getWatchProviders(949, { timeoutMs: 4000 });
+    await tmdb.getMovieDetails(949);
+
+    expect(timeout.mock.calls.map((call) => call[0])).toEqual([
+      4000,
+      REQUEST_TIMEOUT_MS,
+    ]);
+    timeout.mockRestore();
+  });
+
+  it("maps a 404 to tmdb_not_found", async () => {
+    const fetchMock = vi.fn(async () => new Response("{}", { status: 404 }));
+
+    const result = await client(
+      fetchMock as unknown as typeof fetch,
+    ).getWatchProviders(1);
+
+    expect(result).toEqual({ ok: false, error: { code: "tmdb_not_found" } });
+  });
+
+  it("returns tmdb_bad_shape when results is not an object of countries", async () => {
+    const fetchMock = vi.fn(async () => answer({ id: 1, results: [] }));
+
+    const result = await client(
+      fetchMock as unknown as typeof fetch,
+    ).getWatchProviders(1);
+
+    expect(result).toEqual({ ok: false, error: { code: "tmdb_bad_shape" } });
+  });
+});

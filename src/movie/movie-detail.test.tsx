@@ -32,6 +32,27 @@ vi.mock("@/watchlist/actions", () => ({
   rateMovieAction: vi.fn(),
 }));
 
+// Where to watch (spec 0013) has its own tests. Here it is a boundary: the
+// country read, the request headers and the section itself are replaced.
+const requestHeaders = { current: new Headers() };
+const resolveCountry = vi.fn();
+vi.mock("next/headers", () => ({
+  headers: async () => requestHeaders.current,
+}));
+vi.mock("@/watch/resolve-country", () => ({
+  resolveCountry: (...args: unknown[]) => resolveCountry(...args),
+}));
+vi.mock("@/watch/actions", () => ({ setCountryAction: vi.fn() }));
+vi.mock("@/watch/where-to-watch", () => ({
+  WhereToWatch: ({
+    movieId,
+    country,
+  }: {
+    movieId: number;
+    country: string | null;
+  }) => <p data-testid="where-to-watch">{`${movieId}:${country ?? "none"}`}</p>,
+}));
+
 import { MovieDetail } from "./movie-detail";
 
 const heat: CatalogMovie = {
@@ -61,6 +82,8 @@ const bar = (container: HTMLElement) =>
 
 beforeEach(() => {
   vi.clearAllMocks();
+  requestHeaders.current = new Headers();
+  resolveCountry.mockResolvedValue({ ok: true, value: null });
 });
 afterEach(cleanup);
 
@@ -150,5 +173,77 @@ describe("MovieDetail load error (AC-10)", () => {
     loadMoviePage.mockRejectedValue(new Error("reasonFor failed"));
 
     await expect(MovieDetail(INPUT)).rejects.toThrow("reasonFor failed");
+  });
+});
+
+describe("MovieDetail where to watch (spec 0013, AC-1, AC-5)", () => {
+  const section = () => screen.getByTestId("where-to-watch").textContent;
+
+  it("resolves the country from the user and the IP header, and passes it to the section", async () => {
+    requestHeaders.current = new Headers({ "x-vercel-ip-country": "fr" });
+    resolveCountry.mockResolvedValue({ ok: true, value: "FR" });
+    loadMoviePage.mockResolvedValue(ok({ movie: heat, reason: null }));
+
+    await show();
+
+    expect(resolveCountry).toHaveBeenCalledWith(fakeDb, {
+      userId: "user-1",
+      ipCountry: "fr",
+    });
+    expect(section()).toBe("412:FR");
+  });
+
+  it("passes no country when there is no header", async () => {
+    loadMoviePage.mockResolvedValue(ok({ movie: heat, reason: null }));
+
+    await show();
+
+    expect(resolveCountry).toHaveBeenCalledWith(fakeDb, {
+      userId: "user-1",
+      ipCountry: null,
+    });
+    expect(section()).toBe("412:none");
+  });
+
+  it.each([
+    [
+      "fails",
+      () =>
+        resolveCountry.mockResolvedValue({
+          ok: false,
+          error: { code: "db_unavailable" },
+        }),
+    ],
+    ["throws", () => resolveCountry.mockRejectedValue(new Error("down"))],
+  ])(
+    "still shows the movie and asks for a country when the country read %s",
+    async (_label, arrange) => {
+      arrange();
+      loadMoviePage.mockResolvedValue(ok({ movie: heat, reason: null }));
+
+      await show();
+
+      expect(
+        screen.getByRole("heading", { level: 1, name: "Heat" }),
+      ).toBeTruthy();
+      expect(section()).toBe("412:none");
+    },
+  );
+
+  it("places the section after the synopsis and before the director line", async () => {
+    loadMoviePage.mockResolvedValue(ok({ movie: heat, reason: null }));
+
+    const { container } = await show();
+
+    const order = [
+      ...container.querySelectorAll(
+        '[data-slot="movie-overview"], [data-testid="where-to-watch"], [data-slot="movie-directors"]',
+      ),
+    ].map((el) => el.getAttribute("data-slot") ?? "where-to-watch");
+    expect(order).toEqual([
+      "movie-overview",
+      "where-to-watch",
+      "movie-directors",
+    ]);
   });
 });

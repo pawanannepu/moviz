@@ -1,4 +1,14 @@
 import type { NextConfig } from "next";
+import { assertLegalDetailsForBuild } from "./src/legal/operator";
+
+// A production deploy on Vercel refuses to build while the privacy policy and
+// terms still hold placeholder details (spec 0014, AC-12). This reads
+// `process.env` directly, outside `src/env.ts`, because the config runs before
+// the app does.
+assertLegalDetailsForBuild({
+  VERCEL: process.env.VERCEL,
+  VERCEL_ENV: process.env.VERCEL_ENV,
+});
 
 const nextConfig: NextConfig = {
   async headers() {

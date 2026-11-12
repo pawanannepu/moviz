@@ -8,11 +8,13 @@ import { EMBEDDING_MODEL } from "@/catalog/embedding/model";
 import { createDb, type Db } from "@/db/create-db";
 import {
   EMBEDDING_DIMENSIONS,
+  feedFeedback,
   genres,
   movieEmbeddings,
   movies,
   ratings,
   swipeSkips,
+  watchlistEntries,
 } from "@/db/schema";
 import { pgArray } from "@/recommend/pg-array";
 import { token } from "./test-db";
@@ -259,13 +261,22 @@ export function useRecommendFixtures(
     return names;
   }
 
-  /** Removes the movies this test made, with the ratings and skips on them. */
+  /**
+   * Removes the movies this test made, with the ratings, skips, watchlist rows
+   * and feedback on them (each movie key restricts a delete of the movie).
+   */
   async function cleanupMovies(): Promise<void> {
     const db = getDb();
     if (!db) return;
     if (movieIds.length > 0) {
       await db.delete(ratings).where(inArray(ratings.movieId, movieIds));
       await db.delete(swipeSkips).where(inArray(swipeSkips.movieId, movieIds));
+      await db
+        .delete(watchlistEntries)
+        .where(inArray(watchlistEntries.movieId, movieIds));
+      await db
+        .delete(feedFeedback)
+        .where(inArray(feedFeedback.movieId, movieIds));
       await db.delete(movies).where(inArray(movies.id, movieIds));
       movieIds.length = 0;
     }

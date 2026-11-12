@@ -75,4 +75,26 @@ describe("reasonSentence shape (AC-3)", () => {
     expect(reasonSentence(similar(6, { title: "" })).length).toBeGreaterThan(0);
     expect(reasonSentence({ kind: "popular" }).length).toBeGreaterThan(0);
   });
+
+  describe("more like this (spec 0011, AC-8)", () => {
+    const asked = (releaseYear: number | null) =>
+      ({
+        kind: "more_like_this",
+        anchor: { movieId: 900, title: "Heat", releaseYear },
+      }) as const;
+
+    it("says the pick is more like the movie the user asked for", () => {
+      expect(reasonSentence(asked(1995))).toBe(
+        "More like Heat (1995), as you asked",
+      );
+    });
+
+    it("leaves the year and its parentheses out when the year is null", () => {
+      expect(reasonSentence(asked(null))).toBe("More like Heat, as you asked");
+    });
+
+    it("has no full stop", () => {
+      expect(reasonSentence(asked(1995)).endsWith(".")).toBe(false);
+    });
+  });
 });

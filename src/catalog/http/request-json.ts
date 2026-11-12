@@ -3,7 +3,7 @@ import { err, ok, type Result } from "@/lib/result";
 
 /**
  * One HTTP call with the retry rules every catalog provider shares (spec 0003,
- * AC-15): a timeout per try, 3 tries in total, backoff of `500 ms * 2^attempt`
+ * AC-15): a timeout per try, 3 tries in total (fewer with `maxAttempts`), backoff of `500 ms * 2^attempt`
  * plus jitter, `Retry-After` honoured but capped, and the answer parsed with Zod.
  *
  * It never puts a header, a URL, or a response body into an error (AC-16).
@@ -48,6 +48,8 @@ export type JsonRequest<S extends z.ZodType> = {
   body?: string;
   schema: S;
   timeoutMs: number;
+  /** Total tries for this call. Defaults to `MAX_ATTEMPTS`. */
+  maxAttempts?: number;
   /** Epoch milliseconds after which no retry starts. Omit for no limit. */
   deadline?: number;
 };
@@ -85,8 +87,9 @@ export async function requestJson<S extends z.ZodType>(
   const random = runtime.random ?? Math.random;
   const now = runtime.now ?? Date.now;
 
+  const maxAttempts = Math.max(1, request.maxAttempts ?? MAX_ATTEMPTS);
   let lastStatus: number | null = null;
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
     let retryAfterMs: number | null = null;
     try {
       const response = await doFetch(request.url, {
@@ -125,7 +128,7 @@ export async function requestJson<S extends z.ZodType>(
       lastStatus = null;
     }
 
-    if (attempt === MAX_ATTEMPTS - 1) break;
+    if (attempt === maxAttempts - 1) break;
     const timeLeft =
       request.deadline === undefined
         ? Number.POSITIVE_INFINITY

@@ -8,7 +8,7 @@ export default function ListsError({ reset }: { reset: () => void }) {
   return (
     <>
       <FeedHeader />
-      <main className="page-container flex flex-col gap-6 py-8">
+      <div className="page-container flex flex-col gap-6 py-8">
         <h1 className="type-headline">Your lists</h1>
         <ErrorState
           title="We couldn't load your lists."
@@ -16,7 +16,7 @@ export default function ListsError({ reset }: { reset: () => void }) {
           onRetry={reset}
           titleAs="h2"
         />
-      </main>
+      </div>
     </>
   );
 }

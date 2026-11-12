@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { APIRequestContext, Page } from "@playwright/test";
+import { Pool } from "pg";
 import {
   type Account,
   createVerifiedAccount,
@@ -58,7 +59,7 @@ async function openFeed(page: Page, request: APIRequestContext, tag: string) {
 async function firstCard(page: Page) {
   const item = items(page).first();
   const id = Number(await item.getAttribute("data-movie-id"));
-  const title = (await item.locator("h3").innerText()).trim();
+  const title = ((await item.locator("h3").textContent()) ?? "").trim();
   return { id, title, item };
 }
 
@@ -221,5 +222,170 @@ test.describe("movie page (AC-11, AC-15)", () => {
     await expect(
       page.getByRole("button", { name: `Not interested in ${title}` }),
     ).toBeFocused();
+  });
+});
+
+/** Runs one query on the database the server uses (the local env file, or the real environment). */
+async function onServerDb(text: string, values: unknown[]) {
+  try {
+    process.loadEnvFile(".env.local");
+  } catch {
+    // No local env file (for example in CI). The real environment is used.
+  }
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  try {
+    return await pool.query(text, values);
+  } finally {
+    await pool.end();
+  }
+}
+
+const ids = (page: Page) =>
+  items(page).evaluateAll((nodes) =>
+    nodes.map((node) => node.getAttribute("data-movie-id")),
+  );
+
+test.describe("pending and an ended session (AC-5, AC-12)", () => {
+  test("a press waits for the server: both buttons are aria-disabled, a second press sends nothing, other picks stay", async ({
+    page,
+    request,
+  }) => {
+    await openFeed(page, request, "fb-pend");
+    const before = await ids(page);
+    const { title, item } = await firstCard(page);
+    let actions = 0;
+    await page.route("**/home", async (route) => {
+      if (route.request().headers()["next-action"]) {
+        actions++;
+        await new Promise((done) => setTimeout(done, 2000));
+      }
+      await route.continue();
+    });
+    const moreLike = item.getByRole("button", {
+      name: `More like this: ${title}`,
+    });
+    const notInterested = item.getByRole("button", {
+      name: `Not interested in ${title}`,
+    });
+
+    await moreLike.click();
+    await expect(moreLike).toHaveAttribute("aria-disabled", "true");
+    await expect(notInterested).toHaveAttribute("aria-disabled", "true");
+    await moreLike.click({ force: true });
+    await notInterested.click({ force: true });
+
+    await expect(moreLike).toHaveAttribute("aria-pressed", "true", {
+      timeout: 10_000,
+    });
+    await expect(moreLike).not.toHaveAttribute("aria-disabled", "true");
+    expect(actions).toBe(1);
+    expect(await ids(page)).toEqual(before);
+  });
+
+  test("a session ended on the server shows Sign in again back to the feed, with focus", async ({
+    page,
+    request,
+  }) => {
+    const account = await openFeed(page, request, "fb-out");
+    const { title, item } = await firstCard(page);
+    // Revoke the session and keep the cookie, as a sign out in another tab does.
+    await onServerDb(
+      `delete from session where user_id = (select id from "user" where email = $1)`,
+      [account.email],
+    );
+
+    await item
+      .getByRole("button", { name: `More like this: ${title}` })
+      .click();
+
+    const link = item.getByRole("link", { name: "Sign in again" });
+    await expect(item).toContainText("Your session ended.");
+    await expect(link).toBeFocused();
+    await expect(link).toHaveAttribute("href", "/sign-in?returnTo=%2Fhome");
+    await expect(
+      item.getByRole("button", { name: `More like this: ${title}` }),
+    ).toHaveAttribute("aria-pressed", "false");
+  });
+});
+
+test.describe("the kept feed and the movie page (AC-1, AC-11, AC-15)", () => {
+  test("the card body still opens the page, and changes made there reach the kept feed", async ({
+    page,
+    request,
+  }) => {
+    await openFeed(page, request, "fb-keep");
+    const second = items(page).nth(1);
+    const id = Number(await second.getAttribute("data-movie-id"));
+    const title = ((await second.locator("h3").textContent()) ?? "").trim();
+    // The stretched link covers the poster, so a click there opens the movie.
+    const box = await second.locator("img").first().boundingBox();
+    if (!box) throw new Error("no poster box");
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    await expect(page).toHaveURL(`/movie/${id}`);
+    const detail = page.locator('[data-slot="movie-detail"]');
+
+    const moreLike = detail.getByRole("button", {
+      name: `More like this: ${title}`,
+    });
+    await moreLike.click();
+    await expect(moreLike).toHaveAttribute("aria-pressed", "true");
+    await page.goBack();
+    const card = page.locator(`.feed-grid > li[data-movie-id="${id}"]`);
+    await expect(
+      card.getByRole("button", { name: `More like this: ${title}` }),
+    ).toHaveAttribute("aria-pressed", "true");
+
+    // Hide and Undo on the page: the pick is back in the kept list.
+    await card.locator("h3 a").click();
+    await expect(page).toHaveURL(`/movie/${id}`);
+    await detail
+      .getByRole("button", { name: `Not interested in ${title}` })
+      .click();
+    await detail.getByRole("button", { name: `Undo hiding ${title}` }).click();
+    await expect(
+      detail.getByRole("button", { name: `Not interested in ${title}` }),
+    ).toBeFocused();
+    await page.goBack();
+    await expect(
+      page.locator(`.feed-grid > li[data-movie-id="${id}"]`),
+    ).toHaveCount(1);
+
+    // Hide on the feed, open another card, come back: left out, no Hidden line.
+    const first = await firstCard(page);
+    await first.item
+      .getByRole("button", { name: `Not interested in ${first.title}` })
+      .click();
+    await expect(first.item).toContainText("Hidden from your picks.");
+    const other = items(page).nth(2);
+    const otherId = Number(await other.getAttribute("data-movie-id"));
+    await other.locator("h3 a").click();
+    await expect(page).toHaveURL(`/movie/${otherId}`);
+    await page.goBack();
+    await expect(items(page).first()).toBeVisible();
+    await expect(
+      page.locator(`.feed-grid > li[data-movie-id="${first.id}"]`),
+    ).toHaveCount(0);
+    await expect(page.getByText("Hidden from your picks.")).toHaveCount(0);
+  });
+
+  test("a movie the user rated shows no feedback controls", async ({
+    page,
+    request,
+  }) => {
+    const account = await openFeed(page, request, "fb-rated");
+    const rated = await onServerDb(
+      `select r.movie_id from ratings r join "user" u on u.id = r.user_id
+       where u.email = $1 order by r.movie_id limit 1`,
+      [account.email],
+    );
+
+    await page.goto(`/movie/${Number(rated.rows[0].movie_id)}`);
+
+    await expect(page.locator('[data-slot="movie-detail"] h1')).toBeVisible({
+      timeout: COLD_START_MS,
+    });
+    await expect(page.locator('[data-slot="feedback-controls"]')).toHaveCount(
+      0,
+    );
   });
 });

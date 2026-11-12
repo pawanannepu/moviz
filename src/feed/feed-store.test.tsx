@@ -266,6 +266,80 @@ describe("FeedStore opened movie (AC-14, AC-15)", () => {
   });
 });
 
+describe("FeedStore feedback from the movie page (spec 0011, AC-15)", () => {
+  it("hides a pick and keeps it in picks, without changing the first batch ids", () => {
+    const { store } = mount();
+    store.save(kept());
+
+    store.recordFeedback(2, "not_interested");
+
+    const after = store.read("user-1", [1, 2, 3]);
+    expect(after?.hiddenIds).toEqual([2]);
+    expect(after?.picks.map((pick) => pick.movie.id)).toEqual([1, 2, 3, 4, 5]);
+    expect(after?.seedIds).toEqual([1, 2, 3]);
+  });
+
+  it("puts a hidden pick back on Undo", () => {
+    const { store } = mount();
+    store.save(kept({ hiddenIds: [2, 4] }));
+
+    store.recordFeedback(2, null);
+
+    expect(store.read("user-1", [1, 2, 3])?.hiddenIds).toEqual([4]);
+  });
+
+  it("does not list a pick twice when it is hidden again", () => {
+    const { store } = mount();
+    store.save(kept({ hiddenIds: [2] }));
+
+    store.recordFeedback(2, "not_interested");
+
+    expect(store.read("user-1", [1, 2, 3])?.hiddenIds).toEqual([2]);
+  });
+
+  it("sets and clears a pick's More like this state", () => {
+    const { store } = mount();
+    store.save(kept());
+
+    store.recordFeedback(3, "more_like_this");
+    const pressed = store.read("user-1", [1, 2, 3])?.picks;
+    store.recordFeedback(3, null);
+    const cleared = store.read("user-1", [1, 2, 3])?.picks;
+
+    expect(pressed?.find((pick) => pick.movie.id === 3)?.moreLikeThis).toBe(
+      true,
+    );
+    expect(pressed?.filter((pick) => pick.moreLikeThis)).toHaveLength(1);
+    expect(cleared?.find((pick) => pick.movie.id === 3)?.moreLikeThis).toBe(
+      false,
+    );
+  });
+
+  it("unpresses a pick that is then hidden", () => {
+    const { store } = mount();
+    store.save(kept());
+    store.recordFeedback(3, "more_like_this");
+
+    store.recordFeedback(3, "not_interested");
+
+    const after = store.read("user-1", [1, 2, 3]);
+    expect(after?.picks.find((pick) => pick.movie.id === 3)?.moreLikeThis).toBe(
+      false,
+    );
+    expect(after?.hiddenIds).toEqual([3]);
+  });
+
+  it("does nothing when no list is kept, or for a movie not in it", () => {
+    const { store } = mount();
+    store.recordFeedback(2, "not_interested");
+    expect(store.read("user-1", [1, 2, 3])).toBeNull();
+
+    store.save(kept());
+    store.recordFeedback(99, "more_like_this");
+    expect(store.read("user-1", [1, 2, 3])).toEqual(kept());
+  });
+});
+
 describe("useFeedStore with no provider", () => {
   it("gives a store that keeps nothing, so a page outside the signed in area still renders", () => {
     let store!: FeedStore;

@@ -261,3 +261,64 @@ describe("requestJson (AC-15, AC-16)", () => {
     expect(init.signal).toBeInstanceOf(AbortSignal);
   });
 });
+
+describe("requestJson maxAttempts (spec 0013, AC-7)", () => {
+  const runWith = (answers: Array<Response | Error>, maxAttempts: number) => {
+    const fetchMock = scripted(answers);
+    const sleeps: number[] = [];
+    const run = () =>
+      requestJson(
+        { url, headers: {}, schema, timeoutMs: 4000, maxAttempts },
+        {
+          fetch: fetchMock,
+          sleep: async (ms) => {
+            sleeps.push(ms);
+          },
+          random: () => 0,
+          now: () => 0,
+        },
+      );
+    return { fetchMock, sleeps, run };
+  };
+
+  it("makes a single try with no backoff when maxAttempts is 1", async () => {
+    const { run, fetchMock, sleeps } = runWith(
+      [new Response("{}", { status: 503 }), json({ value: 1 })],
+      1,
+    );
+
+    expect(await run()).toEqual({
+      ok: false,
+      error: { code: "unavailable", status: 503 },
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(sleeps).toEqual([]);
+  });
+
+  it("reports a null status for a single try that timed out", async () => {
+    const { run, fetchMock } = runWith([new Error("aborted")], 1);
+
+    expect(await run()).toEqual({
+      ok: false,
+      error: { code: "unavailable", status: null },
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("still makes one try when maxAttempts is below 1", async () => {
+    const { run, fetchMock } = runWith([json({ value: 2 })], 0);
+
+    expect(await run()).toEqual({ ok: true, value: { value: 2 } });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("uses the timeout it was given for each try", async () => {
+    const timeout = vi.spyOn(AbortSignal, "timeout");
+    const { run } = runWith([json({ value: 1 })], 1);
+
+    await run();
+
+    expect(timeout).toHaveBeenCalledWith(4000);
+    timeout.mockRestore();
+  });
+});

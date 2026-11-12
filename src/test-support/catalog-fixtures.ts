@@ -176,6 +176,10 @@ export function fakeVoyage(
 ) {
   const batches: string[][] = [];
   const client: VoyageClient = {
+    // The catalog never embeds a query. Bite search tests bring their own fake.
+    async embedQuery() {
+      return { ok: false, error: { code: "voyage_unavailable", status: null } };
+    },
     async embedDocuments(texts) {
       batches.push(texts);
       await behavior.onBatch?.(texts);

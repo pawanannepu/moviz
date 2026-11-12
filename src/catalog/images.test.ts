@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { POSTER_DIMENSIONS, type PosterSize, posterUrl } from "./images";
+import {
+  POSTER_DIMENSIONS,
+  type PosterSize,
+  posterUrl,
+  providerLogoUrl,
+} from "./images";
 
 describe("posterUrl (AC-13)", () => {
   it.each([
@@ -29,5 +34,23 @@ describe("POSTER_DIMENSIONS (AC-13)", () => {
       expect(width).toBe(Number(size.slice(1)));
       expect(Math.abs(height / width - 1.5)).toBeLessThan(0.01);
     }
+  });
+});
+
+describe("providerLogoUrl (spec 0013, AC-2)", () => {
+  it("builds the w92 address from a stored logo path", () => {
+    expect(providerLogoUrl("/netflix.jpg")).toBe(
+      "https://image.tmdb.org/t/p/w92/netflix.jpg",
+    );
+  });
+
+  it("adds the leading slash when the stored path has none", () => {
+    expect(providerLogoUrl("netflix.jpg")).toBe(
+      "https://image.tmdb.org/t/p/w92/netflix.jpg",
+    );
+  });
+
+  it.each([null, "", "   "])("returns null for a missing logo (%j)", (path) => {
+    expect(providerLogoUrl(path)).toBeNull();
   });
 });

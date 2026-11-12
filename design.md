@@ -149,6 +149,14 @@ The page of one movie, `/movie/[id]` ([spec 0010](docs/specs/0010-movie-detail-p
 - **BackToPicks** (`back-to-picks.tsx`): a quiet Dust link with a left arrow, 44px high, above the poster. It is always a real link to `/home`. When the movie was opened from the feed, it steps back in history instead, so the feed shows where the user left it.
 - The load error uses ErrorState with the words "We couldn't load this movie." The header and the back link stay above it.
 
+### Where to watch (`src/watch/`)
+
+A section on the movie page, after the synopsis and before "Directed by" ([spec 0013](docs/specs/0013-where-to-watch/index.md)). It streams in behind its own skeleton, so the rest of the page never waits for it.
+
+- **WhereToWatchView** (`where-to-watch-view.tsx`): a `type-section` heading "Where to watch" with a Curtain rule above it, then the Dust line "In France" with a secondary "Change country" button. Services sit in up to four groups (Stream, Free, Rent, Buy), each a small Dust heading over a wrapping list. A service is a 32px logo with rounded corners (hotlinked from TMDB at `w92`, empty alt) and its name as text beside it; a missing logo is a plain Curtain square. Services are not links. Under the groups, an underlined "See all options on TMDB" link, then the credit "Streaming data from JustWatch" in `type-small`. The empty state ("Not found on streaming in France.") keeps the credit; the could not load line has none. No yellow here: the section is information, not the next step.
+- **WhereToWatchSkeleton**: the real heading, then static blocks hidden from screen readers.
+- **CountryPicker** (`country-picker.tsx`): a labelled native select "Country" with a primary Save and a ghost Cancel. Escape closes it. A failed save shows an Exit line beside Save; a lost session shows "Your session ended." with a "Sign in again" link. With no country yet it is open from the start.
+
 ### Watchlist and seen list (`src/watchlist/`)
 
 The protected `/lists` page puts the watchlist first and the seen list second. It keeps the same left aligned page container and feed grid, with a short promise line, one headline, and anchor links to each list. Each movie sits in a Curtain panel with its poster, title, year, and the action that fits its state. A watchlist movie can be removed or rated. A seen movie shows its rating and can be updated. Each list pages independently with a clear next page link.

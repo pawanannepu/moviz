@@ -19,10 +19,10 @@ export function MovieListCard({
   const score = kind === "seen" ? movie.score : null;
   return (
     <article className="flex flex-col gap-4 rounded-sheet bg-card p-4">
-      <Link
-        href={moviePath(movie.movieId)}
-        className="group flex items-center gap-4 rounded-control"
-      >
+      {/* The title link stretches over the poster row (like `MovieCard`), so
+          the link's name is just the title and the heading is not nested in
+          phrasing content. The link keeps the global focus ring. */}
+      <div className="group relative flex items-center gap-4 rounded-control">
         <PosterImage
           src={posterUrl(movie.posterPath, "w342")}
           alt={`Poster for ${movie.title}`}
@@ -31,21 +31,27 @@ export function MovieListCard({
           title={movie.title}
           className="w-24 shrink-0"
         />
-        <span className="flex min-w-0 flex-col gap-1">
+        <div className="flex min-w-0 flex-col gap-1">
           <h3 className="type-title wrap-break-word text-foreground underline-offset-4 group-hover:underline">
-            {movie.title}
+            <Link
+              href={moviePath(movie.movieId)}
+              className="after:absolute after:inset-0"
+            >
+              {movie.title}
+            </Link>
           </h3>
           {movie.year ? (
-            <span className="text-muted-foreground">{movie.year}</span>
+            <p className="text-muted-foreground">{movie.year}</p>
           ) : null}
           {kind === "seen" ? (
-            <span className="text-muted-foreground">
+            <p className="text-muted-foreground">
               Your rating: {movie.score / 2} stars
-            </span>
+            </p>
           ) : null}
-        </span>
-      </Link>
+        </div>
+      </div>
       <MovieListActions
+        title={movie.title}
         movieId={movie.movieId}
         watchlisted={kind === "watchlist"}
         score={score}

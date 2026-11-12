@@ -22,9 +22,22 @@ async function getHeroPick(): Promise<HeroPick | null> {
 /**
  * The landing page. It reads the session, so it is rendered per request, and a
  * signed in visitor goes to the home page (spec 0005, AC-9). A cookie with no
- * live session counts as signed out.
+ * live session counts as signed out. After an account is deleted it shows one
+ * status line (spec 0014, AC-10); only the fixed `deleted=1` value does.
  */
-export default async function Home() {
+export default async function Home({ searchParams }: PageProps<"/">) {
   if (await getSession()) redirect(HOME_PATH);
-  return <Hero pick={await getHeroPick()} />;
+  const { deleted } = await searchParams;
+  return (
+    <>
+      <div role="status" className="page-container empty:hidden">
+        {deleted === "1" ? (
+          <p className="mt-4 rounded-control border border-border bg-card p-4">
+            Your account and all its data are deleted.
+          </p>
+        ) : null}
+      </div>
+      <Hero pick={await getHeroPick()} />
+    </>
+  );
 }

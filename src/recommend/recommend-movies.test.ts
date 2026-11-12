@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createDb } from "@/db/create-db";
+import { setFeedback } from "@/feedback/feedback";
 import {
   capturingDb,
   near,
@@ -766,6 +767,97 @@ describe.skipIf(!TEST_DATABASE_URL)("recommendMovies", () => {
       } finally {
         await capture.pool.end();
       }
+    });
+  });
+
+  describe("feed feedback (spec 0011)", () => {
+    const ask = (userId: string, movieId: number) =>
+      setFeedback(ctx.db, { userId, movieId, kind: "more_like_this" });
+
+    it("AC-9: gives taste picks, not popular, to a user whose only signal is one More like this", async () => {
+      const [asked, close] = await fx.addMovies([
+        { vector: vec([[A, 1]]), releaseDate: "1995-12-15" },
+        { vector: near(A, 0.9, fx.privateDim()) },
+      ]);
+      const userId = await isolatedUser([asked, close]);
+      await ask(userId, asked);
+
+      const result = await recommend({ userId, limit: 50 });
+
+      expect(result.profile.strength).toBe("thin");
+      expect(result.profile.likedCount).toBe(0);
+      expect(
+        result.picks.find((p) => p.movie.id === close)?.reason,
+      ).toMatchObject({
+        kind: "more_like_this",
+        anchor: { movieId: asked, releaseYear: 1995 },
+      });
+    });
+
+    it("AC-9: counts More like this anchors toward the ok strength", async () => {
+      const liked = await fx.addMovies([{}, {}]);
+      const asked = await fx.addMovies([{}, {}, {}]);
+      const userId = await isolatedUser([...liked, ...asked]);
+      await fx.rate(
+        userId,
+        liked.map((movieId) => ({ movieId, score: 9 })),
+      );
+      for (const movieId of asked) await ask(userId, movieId);
+
+      const result = await recommend({ userId, limit: 5 });
+
+      expect(result.profile.likedCount).toBe(2);
+      expect(result.profile.strength).toBe("ok");
+    });
+
+    it("AC-6: ranks a More like this movie's neighbour higher than it ranked before", async () => {
+      const [loved, asked, nearLoved, nearAsked] = await fx.addMovies([
+        { vector: vec([[A, 1]]) },
+        { vector: vec([[B, 1]]) },
+        { vector: near(A, 0.8, fx.privateDim()) },
+        { vector: near(B, 0.95, fx.privateDim()) },
+      ]);
+      const userId = await isolatedUser([loved, asked, nearLoved, nearAsked]);
+      await fx.rate(userId, [{ movieId: loved, score: 9 }]);
+      const order = async () =>
+        idsOf(await recommend({ userId, limit: 50 })).filter((id) =>
+          [nearLoved, nearAsked].includes(id),
+        );
+
+      const before = await order();
+      await ask(userId, asked);
+      const after = await order();
+
+      expect(before[0]).toBe(nearLoved);
+      expect(after[0]).toBe(nearAsked);
+    });
+
+    it("AC-4: never picks a movie marked not interested, however close it is", async () => {
+      const [loved, twin] = await fx.addMovies([
+        { vector: vec([[A, 1]]) },
+        { vector: vec([[A, 1]]) },
+      ]);
+      const userId = await isolatedUser([loved, twin]);
+      await fx.rate(userId, [{ movieId: loved, score: 10 }]);
+      await setFeedback(ctx.db, {
+        userId,
+        movieId: twin,
+        kind: "not_interested",
+      });
+
+      expect(idsOf(await recommend({ userId, limit: 50 }))).toEqual([]);
+    });
+
+    it("AC-4: never picks a movie marked not interested in the popular fallback", async () => {
+      const [dismissed] = await fx.addMovies([{ voteCount: TOP_VOTES }]);
+      const userId = await isolatedUser([dismissed]);
+      await setFeedback(ctx.db, {
+        userId,
+        movieId: dismissed,
+        kind: "not_interested",
+      });
+
+      expect(idsOf(await recommend({ userId, limit: 50 }))).toEqual([]);
     });
   });
 });

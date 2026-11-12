@@ -6,6 +6,7 @@ import {
   date,
   index,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   primaryKey,
@@ -197,3 +198,35 @@ export const movieEmbeddings = pgTable(
     ),
   ],
 );
+
+/**
+ * One stored offer: a service carrying the movie in one country (spec 0013).
+ * `free` and `ads` are kept apart here and merged only for display.
+ */
+export type WatchOfferType = "flatrate" | "free" | "ads" | "rent" | "buy";
+export type StoredWatchOffer = {
+  type: WatchOfferType;
+  providerId: number;
+  name: string;
+  logoPath: string | null;
+  priority: number;
+};
+export type StoredWatchRegion = {
+  link: string | null;
+  offers: StoredWatchOffer[];
+};
+
+/**
+ * Where to watch, cached per movie for every country TMDB returned (spec 0013,
+ * AC-7, AC-11). Catalog data, not user data: it is not in the export and goes
+ * with its movie. `regions` is parsed with Zod on read.
+ */
+export const watchAvailability = pgTable("watch_availability", {
+  movieId: bigint("movie_id", { mode: "number" })
+    .primaryKey()
+    .references(() => movies.id, { onDelete: "cascade" }),
+  regions: jsonb("regions")
+    .$type<Record<string, StoredWatchRegion>>()
+    .notNull(),
+  fetchedAt: timestamptz("fetched_at").notNull(),
+});

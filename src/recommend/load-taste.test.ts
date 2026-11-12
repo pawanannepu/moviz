@@ -1,10 +1,12 @@
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
-import { movieEmbeddings, movies } from "@/db/schema";
+import { feedFeedback, movieEmbeddings, movies } from "@/db/schema";
+import { setFeedback } from "@/feedback/feedback";
 import { useRecommendFixtures } from "@/test-support/recommend-fixtures";
 import { TEST_DATABASE_URL, useTestDb } from "@/test-support/test-db";
 import { loadTaste } from "./load-taste";
 import { ratingWeight } from "./rules";
+import { MORE_LIKE_THIS_ANCHORS, MORE_LIKE_THIS_WEIGHT } from "./weights";
 
 describe.skipIf(!TEST_DATABASE_URL)("loadTaste", () => {
   const ctx = useTestDb();
@@ -267,5 +269,129 @@ describe.skipIf(!TEST_DATABASE_URL)("loadTaste", () => {
     expect(aliceTaste.dislikedCount).toBe(0);
     expect(bobTaste.disliked.map((x) => x.movieId)).toEqual([b]);
     expect(bobTaste.likedCount).toBe(0);
+  });
+
+  describe("More like this anchors (spec 0011)", () => {
+    /** Marks each movie more like this, with `created_at` one day apart in list order. */
+    async function ask(userId: string, movieIds: number[]) {
+      for (const [index, movieId] of movieIds.entries()) {
+        await setFeedback(ctx.db, { userId, movieId, kind: "more_like_this" });
+        await ctx.db
+          .update(feedFeedback)
+          .set({ createdAt: new Date(Date.UTC(2026, 0, 1 + index)) })
+          .where(eq(feedFeedback.movieId, movieId));
+      }
+    }
+
+    it("AC-6: gives each one its id, title, year, the fixed weight and its source, with no score", async () => {
+      const user = await ctx.fx.newUser();
+      const movieId = await fx.addMovie({ releaseDate: "1995-12-15" });
+      await ask(user.id, [movieId]);
+      const [{ title }] = await ctx.db
+        .select({ title: movies.title })
+        .from(movies)
+        .where(eq(movies.id, movieId));
+
+      const taste = await loadTaste(ctx.db, user.id);
+
+      expect(taste.moreLikeThis).toEqual([
+        {
+          movieId,
+          title,
+          releaseYear: 1995,
+          weight: MORE_LIKE_THIS_WEIGHT,
+          source: "more_like_this",
+        },
+      ]);
+      expect(taste.moreLikeThisCount).toBe(1);
+      expect(taste.liked).toEqual([]);
+      expect(taste.likedCount).toBe(0);
+    });
+
+    it("AC-6: keeps the newest ten, newest first, and counts them all", async () => {
+      const user = await ctx.fx.newUser();
+      const ids = await fx.addMovies(Array.from({ length: 11 }, () => ({})));
+      await ask(user.id, ids);
+
+      const taste = await loadTaste(ctx.db, user.id);
+
+      expect(MORE_LIKE_THIS_ANCHORS).toBe(10);
+      expect(taste.moreLikeThis.map((a) => a.movieId)).toEqual(
+        [...ids].reverse().slice(0, 10),
+      );
+      expect(taste.moreLikeThisCount).toBe(11);
+    });
+
+    it("AC-6: breaks a created_at tie by the highest movie id", async () => {
+      const user = await ctx.fx.newUser();
+      const ids = await fx.addMovies([{}, {}]);
+      for (const movieId of ids) {
+        await setFeedback(ctx.db, {
+          userId: user.id,
+          movieId,
+          kind: "more_like_this",
+        });
+      }
+      await ctx.db
+        .update(feedFeedback)
+        .set({ createdAt: new Date("2026-02-01T00:00:00.000Z") })
+        .where(eq(feedFeedback.userId, user.id));
+
+      const taste = await loadTaste(ctx.db, user.id);
+
+      expect(taste.moreLikeThis.map((a) => a.movieId)).toEqual(
+        sorted(ids).reverse(),
+      );
+    });
+
+    it("AC-10: never reads a rated movie as a feedback anchor, whatever the score", async () => {
+      const user = await ctx.fx.newUser();
+      const [ratedLow, ratedHigh, asked] = await fx.addMovies([{}, {}, {}]);
+      await ask(user.id, [ratedLow, ratedHigh, asked]);
+      await fx.rate(user.id, [
+        { movieId: ratedLow, score: 2 },
+        { movieId: ratedHigh, score: 10 },
+      ]);
+
+      const taste = await loadTaste(ctx.db, user.id);
+
+      expect(taste.moreLikeThis.map((a) => a.movieId)).toEqual([asked]);
+      expect(taste.moreLikeThisCount).toBe(1);
+      expect(taste.liked.map((a) => a.source)).toEqual(["rating"]);
+    });
+
+    it("ignores not interested movies and movies with no current embedding", async () => {
+      const user = await ctx.fx.newUser();
+      const [dismissed, unembedded] = await fx.addMovies([
+        {},
+        { vector: null, removed: true },
+      ]);
+      await setFeedback(ctx.db, {
+        userId: user.id,
+        movieId: dismissed,
+        kind: "not_interested",
+      });
+      await setFeedback(ctx.db, {
+        userId: user.id,
+        movieId: unembedded,
+        kind: "more_like_this",
+      });
+
+      const taste = await loadTaste(ctx.db, user.id);
+
+      expect(taste.moreLikeThis).toEqual([]);
+      expect(taste.moreLikeThisCount).toBe(0);
+    });
+
+    it("AC-16: reads only this user's feedback", async () => {
+      const [owner, other] = [await ctx.fx.newUser(), await ctx.fx.newUser()];
+      const movieId = await fx.addMovie();
+      await ask(other.id, [movieId]);
+
+      const taste = await loadTaste(ctx.db, owner.id);
+
+      expect(taste.moreLikeThis).toEqual([]);
+      expect(taste.moreLikeThisCount).toBe(0);
+    });
   });
 });

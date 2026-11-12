@@ -196,7 +196,9 @@ export const auth = betterAuth({
     backgroundTasks: { handler: runAfterResponse },
   },
   // The default in memory store does nothing on serverless. Per IP limits for
-  // exactly these four routes (AC-11); every other route keeps the defaults.
+  // exactly these five routes (AC-11); every other route keeps the defaults.
+  // `/delete-user` checks the password, so it gets a tight limit against
+  // password guessing (spec 0014, AC-11).
   rateLimit: {
     enabled: true,
     storage: "database",
@@ -205,6 +207,7 @@ export const auth = betterAuth({
       "/sign-up/email": { window: 60, max: 3 },
       "/request-password-reset": { window: 60, max: 3 },
       "/send-verification-email": { window: 60, max: 1 },
+      "/delete-user": { window: 60, max: 5 },
     },
   },
   // The bot check covers sign up and reset requests only. The plugin's default
@@ -218,7 +221,7 @@ export const auth = betterAuth({
     }),
   ],
   user: {
-    // No screen ships here (spec 17 builds it). The route needs the current
+    // The Account page calls it (spec 0014, AC-9). The route needs the current
     // password (see `hooks.before`), clears the user's token rows first, then
     // removes the user and everything it owns (AC-13).
     deleteUser: {

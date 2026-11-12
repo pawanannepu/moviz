@@ -13,8 +13,9 @@ vi.mock("@/recommend/recommend-movies", () => ({
 }));
 
 // Which picks are pressed "More like this" is one more read (spec 0011).
+const moreLikeThisIds = vi.fn();
 vi.mock("@/feedback/feedback", () => ({
-  moreLikeThisIds: async () => ({ ok: true, value: new Set<number>() }),
+  moreLikeThisIds: (...args: unknown[]) => moreLikeThisIds(...args),
 }));
 
 import { FEED_BATCH_SIZE } from "./constants";
@@ -55,6 +56,7 @@ function recommendations(
 
 beforeEach(() => {
   vi.resetAllMocks();
+  moreLikeThisIds.mockResolvedValue(ok(new Set<number>()));
 });
 
 describe("loadFeedBatch", () => {
@@ -220,5 +222,57 @@ describe("loadFeedBatch", () => {
       expect(error.message).not.toContain("secret-user-id");
       expect(error.message).not.toContain("4242");
     });
+  });
+});
+
+describe("loadFeedBatch pressed state (spec 0011, AC-5)", () => {
+  it("reads the pressed state once for the batch's movie ids and marks those picks", async () => {
+    recommendMovies.mockResolvedValue(ok(recommendations(picks(3))));
+    moreLikeThisIds.mockResolvedValue(ok(new Set([2])));
+
+    const result = await loadFeedBatch(db, { userId: "user-1", shown: [] });
+
+    expect(moreLikeThisIds).toHaveBeenCalledTimes(1);
+    expect(moreLikeThisIds).toHaveBeenCalledWith(db, {
+      userId: "user-1",
+      movieIds: [1, 2, 3],
+    });
+    if (!result.ok) throw new Error("expected picks");
+    expect(result.value.picks.map((pick) => pick.moreLikeThis)).toEqual([
+      false,
+      true,
+      false,
+    ]);
+  });
+
+  it("returns db_unavailable when the pressed read fails", async () => {
+    recommendMovies.mockResolvedValue(ok(recommendations(picks(3))));
+    moreLikeThisIds.mockResolvedValue(err({ code: "db_unavailable" }));
+
+    expect(await loadFeedBatch(db, { userId: "user-1", shown: [] })).toEqual(
+      err({ code: "db_unavailable" }),
+    );
+  });
+
+  it("words a more_like_this reason for the card", async () => {
+    recommendMovies.mockResolvedValue(
+      ok(
+        recommendations([
+          pick(1, {
+            reason: {
+              kind: "more_like_this",
+              anchor: { movieId: 900, title: "Heat", releaseYear: 1995 },
+            },
+          }),
+        ]),
+      ),
+    );
+
+    const result = await loadFeedBatch(db, { userId: "user-1", shown: [] });
+
+    if (!result.ok) throw new Error("expected picks");
+    expect(result.value.picks[0].reason).toBe(
+      "More like Heat (1995), as you asked",
+    );
   });
 });

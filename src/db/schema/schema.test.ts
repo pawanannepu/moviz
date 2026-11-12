@@ -53,7 +53,7 @@ describe("the Drizzle schema", () => {
   describe("every user_id column (AC-15)", () => {
     const withUserId = listTablesWithUserId();
 
-    it("is found on the eight tables that hold user rows", () => {
+    it("is found on the nine tables that hold user rows", () => {
       expect(withUserId.map((table) => table.name).sort()).toEqual(
         [
           "account",
@@ -61,6 +61,7 @@ describe("the Drizzle schema", () => {
           "imports",
           "profiles",
           "ratings",
+          "search_usage",
           "session",
           "swipe_skips",
           "watchlist_entries",

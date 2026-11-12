@@ -161,6 +161,37 @@ describe("MovieCard (AC-8)", () => {
   });
 });
 
+describe("MovieCard controls slot (spec 0011, AC-1)", () => {
+  it("renders the controls inside the card, after the title and meta line", () => {
+    const { container } = render(
+      <MovieCard
+        movie={heat}
+        href="/movie/1"
+        controls={<button type="button">Not interested in Heat</button>}
+      />,
+    );
+
+    const card = container.querySelector('[data-slot="movie-card"]');
+    const button = screen.getByRole("button", {
+      name: "Not interested in Heat",
+    });
+    const meta = screen.getByText("1995, Action, Crime");
+    expect(card?.contains(button)).toBe(true);
+    expect(
+      meta.compareDocumentPosition(button) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Heat" }).contains(button)).toBe(
+      false,
+    );
+  });
+
+  it("renders nothing extra without controls", () => {
+    render(<MovieCard movie={heat} />);
+
+    expect(screen.queryByRole("button")).toBeNull();
+  });
+});
+
 describe("FeedItem (AC-9)", () => {
   it("shows the reason as real text in the subtitle bar", () => {
     const { container } = render(

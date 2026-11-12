@@ -1,7 +1,7 @@
 # 0012. Bite search: a short phrase, embedded with Voyage, blended with your taste, with word rules for hard limits
 
 **Date**: 2026-11-12
-**Status**: Proposed
+**Status**: In Progress
 
 ## Summary
 

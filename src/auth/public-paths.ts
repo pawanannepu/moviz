@@ -1,3 +1,4 @@
+import { PRIVACY_PATH, TERMS_PATH } from "@/legal/paths";
 import {
   FORGOT_PASSWORD_PATH,
   RESET_PASSWORD_PATH,
@@ -14,6 +15,9 @@ const PUBLIC_PAGES: ReadonlySet<string> = new Set([
   FORGOT_PASSWORD_PATH,
   RESET_PASSWORD_PATH,
   VERIFY_EMAIL_PATH,
+  // The legal pages are readable before sign up (spec 0014, AC-1).
+  PRIVACY_PATH,
+  TERMS_PATH,
 ]);
 
 /**

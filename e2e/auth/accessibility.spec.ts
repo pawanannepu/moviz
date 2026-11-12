@@ -4,7 +4,6 @@ import {
   type Account,
   createVerifiedAccount,
   deleteAccountQuietly,
-  formAlert,
   rateEmbeddedMoviesInDb,
   signInViaForm,
 } from "../support/auth";
@@ -82,6 +81,9 @@ async function waitForHydration(page: Page, selector: string) {
   }, selector);
 }
 
+const removeStartMarker = (page: Page) =>
+  page.evaluate(() => document.getElementById("__a11y-start")?.remove());
+
 type Stop = { label: string; ring: boolean; shown: boolean };
 
 /**
@@ -93,8 +95,17 @@ async function walkTabStops(
   page: Page,
   max = 120,
 ): Promise<{ stops: Stop[]; left: boolean }> {
+  // Blur alone keeps the browser's focus starting point where focus last was,
+  // so park focus on a non tabbable marker at the very top of the body.
   await page.evaluate(() => {
-    (document.activeElement as HTMLElement | null)?.blur();
+    // Client navigation keeps `window`, so forget the stops of an earlier walk.
+    delete (window as unknown as { __a11yStops?: WeakSet<Element> })
+      .__a11yStops;
+    const marker = document.createElement("span");
+    marker.id = "__a11y-start";
+    marker.tabIndex = -1;
+    document.body.prepend(marker);
+    marker.focus();
     window.scrollTo(0, 0);
   });
   const stops: Stop[] = [];
@@ -117,10 +128,24 @@ async function walkTabStops(
       return {
         repeat,
         label: `${element.tagName.toLowerCase()} "${name}"`,
-        ring:
-          (style.outlineStyle !== "none" &&
-            Number.parseFloat(style.outlineWidth) > 0) ||
-          style.boxShadow !== "none",
+        // The ring may be drawn on the element or, for a stretched card link,
+        // on the nearest card around it (`has-[a:focus-visible]`).
+        ring: (() => {
+          for (
+            let node: Element | null = element, depth = 0;
+            node && depth < 4;
+            node = node.parentElement, depth++
+          ) {
+            const own = getComputedStyle(node);
+            if (
+              (own.outlineStyle !== "none" &&
+                Number.parseFloat(own.outlineWidth) > 0) ||
+              own.boxShadow !== "none"
+            )
+              return true;
+          }
+          return false;
+        })(),
         shown:
           rect.width > 0 &&
           rect.height > 0 &&
@@ -129,11 +154,15 @@ async function walkTabStops(
       };
     });
     if (stop === null || stop.repeat) {
-      if (stops.length > 0) return { stops, left: true };
+      if (stops.length > 0) {
+        await removeStartMarker(page);
+        return { stops, left: true };
+      }
       continue;
     }
     stops.push({ label: stop.label, ring: stop.ring, shown: stop.shown });
   }
+  await removeStartMarker(page);
   return { stops, left: false };
 }
 
@@ -237,6 +266,8 @@ test.describe("feed and movie page with the keyboard only", () => {
     await expect(page).toHaveURL(/\/movie\/\d+/, { timeout: COLD_START_MS });
     const back = page.getByRole("link", { name: "Back to picks" });
     await expect(back).toBeVisible({ timeout: COLD_START_MS });
+    // The title streams in with the page metadata (spec 0010, AC-19).
+    await expect(page).toHaveTitle(/\S.* · Moviz$/, { timeout: COLD_START_MS });
     await waitForHydration(page, '[data-slot="movie-detail"] a, main a');
 
     await expectNoViolations(page, "movie page");
@@ -272,7 +303,10 @@ test.describe("feed and movie page with the keyboard only", () => {
 
     const response = await page.goto("/no-such-page");
     expect(response?.status()).toBe(404);
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Page not found" }),
+    ).toBeVisible();
+    await expect(page.locator("main")).toHaveCount(1);
     await expectNoViolations(page, "not found page");
     await expectKeyboardReachable(page);
   });
@@ -303,8 +337,9 @@ test.describe("import with the keyboard only", () => {
     const submit = page.getByRole("button", { name: "Import ratings" });
     await tabTo(page, submit);
     await page.keyboard.press("Enter");
-    await expect(formAlert(page)).toBeVisible();
-    await expect(page.getByText("No file chosen")).toBeVisible();
+    await expect(
+      page.getByRole("alert").filter({ hasText: "No file chosen" }),
+    ).toBeVisible();
     await expectNoViolations(page, "import, no file error");
     const retry = page.getByRole("button", { name: "Try again" });
     await tabTo(page, retry);
@@ -334,4 +369,199 @@ test.describe("import with the keyboard only", () => {
     await expectNoSidewaysScroll(page);
     await expectKeyboardReachable(page);
   });
+});
+
+test.describe("lists with the keyboard only", () => {
+  test("both lists pass axe empty and filled, and a saved movie is rated by keyboard with focus moved to its new list", async ({
+    page,
+    request,
+  }) => {
+    test.setTimeout(240_000);
+    await page.setViewportSize(PHONE);
+    const account = await newAccount(request, "lists", { liked: 3 });
+    await signInViaForm(page, account.email);
+    await expect(page).toHaveURL("/home", { timeout: COLD_START_MS });
+
+    // Seen list filled from the ratings, watchlist empty.
+    await page.goto("/lists");
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Your lists" }),
+    ).toBeVisible({ timeout: COLD_START_MS });
+    await expect(page.locator("main")).toHaveCount(1);
+    await expect(
+      page.getByRole("heading", { name: "Your watchlist is waiting" }),
+    ).toBeVisible();
+    await waitForHydration(page, "#seen select");
+    await expectNoViolations(page, "lists, empty watchlist");
+    await expectNoSidewaysScroll(page);
+    await expectKeyboardReachable(page);
+
+    // Save the first pick to the watchlist from its movie page, by keyboard.
+    await page.goto("/home");
+    await expect(feedItems(page).first()).toBeVisible({
+      timeout: COLD_START_MS,
+    });
+    await waitForHydration(page, ".feed-grid > li a");
+    await tabTo(page, feedItems(page).first().getByRole("link"));
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(/\/movie\/\d+/, { timeout: COLD_START_MS });
+    // The skeleton has its own h1 ("Loading movie"), so wait for the real one.
+    await expect(page.getByRole("heading", { level: 1 })).not.toHaveText(
+      "Loading movie",
+      { timeout: COLD_START_MS },
+    );
+    const title = (
+      await page.getByRole("heading", { level: 1 }).textContent()
+    )?.trim();
+    expect(title).toBeTruthy();
+    const save = page.getByRole("button", { name: "Add to watchlist" });
+    await waitForHydration(page, "main button");
+    await tabTo(page, save);
+    await page.keyboard.press("Enter");
+    await expect(
+      page.getByRole("status").filter({ hasText: "Saved to your watchlist." }),
+    ).toBeVisible({ timeout: COLD_START_MS });
+    await expect(
+      page.getByRole("button", { name: "Remove from watchlist" }),
+    ).toBeFocused();
+
+    // Both lists filled.
+    await page.goto("/lists");
+    const card = page.getByRole("group", {
+      name: `List actions for ${title}`,
+    });
+    await expect(card).toBeVisible({ timeout: COLD_START_MS });
+    await waitForHydration(page, "#watchlist select");
+    await expectNoViolations(page, "lists, both filled");
+    await expectKeyboardReachable(page);
+
+    // The select is named by its visible label (label in name).
+    const rating = card.getByRole("combobox", {
+      name: "Mark seen with a rating",
+    });
+    await tabTo(page, rating);
+    await rating.selectOption("8");
+    await tabTo(page, card.getByRole("button", { name: "Save rating" }));
+    await page.keyboard.press("Enter");
+    // The card leaves the watchlist, so focus moves to the list it joined.
+    await expect(
+      page.getByRole("heading", { level: 2, name: "Seen and rated" }),
+    ).toBeFocused({ timeout: COLD_START_MS });
+    await expect(
+      page.getByRole("heading", { name: "Your watchlist is waiting" }),
+    ).toBeVisible({ timeout: COLD_START_MS });
+    await expectNoViolations(page, "lists, after rating a saved movie");
+  });
+});
+
+test.describe("search with the keyboard only", () => {
+  test("every state of /search passes axe, an example fills the field, and focus follows each outcome", async ({
+    page,
+    request,
+  }) => {
+    test.setTimeout(240_000);
+    await page.setViewportSize(PHONE);
+    const account = await newAccount(request, "search", { liked: 5 });
+    await signInViaForm(page, account.email);
+    await expect(page).toHaveURL("/home", { timeout: COLD_START_MS });
+    await page.goto("/search");
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Search by mood" }),
+    ).toBeVisible({ timeout: COLD_START_MS });
+    await waitForHydration(page, 'form button[type="submit"]');
+
+    await expectNoViolations(page, "search, idle");
+    await expectNoSidewaysScroll(page);
+    await expectKeyboardReachable(page);
+
+    const field = page.getByLabel("Describe what you feel like watching");
+    const submit = page.getByRole("button", { name: "Find picks" });
+
+    // A phrase that is too short: the field says so and keeps focus.
+    await tabTo(page, field);
+    await page.keyboard.type("a");
+    await tabTo(page, submit);
+    await page.keyboard.press("Enter");
+    await expect(page.getByText("Type at least 2 characters.")).toBeVisible();
+    await expect(field).toBeFocused();
+    await expect(field).toHaveAttribute("aria-invalid", "true");
+    await expectNoViolations(page, "search, phrase too short");
+
+    // An example fills the field, does not search, and sends focus back.
+    const example = page.getByRole("button", {
+      name: "a slow moody thriller from the 90s",
+    });
+    await tabTo(page, example);
+    await page.keyboard.press("Enter");
+    await expect(field).toHaveValue("a slow moody thriller from the 90s");
+    await expect(field).toBeFocused();
+
+    // A real search: focus lands on the heading of what it produced.
+    await tabTo(page, submit);
+    await page.keyboard.press("Enter");
+    const outcome = page.locator(
+      '[data-slot="search-results"] h2, [data-slot="search-empty"] h2, [data-slot="search-error"], [data-slot="search-quota"]',
+    );
+    await expect(outcome.first()).toBeFocused({ timeout: 30_000 });
+    await expectNoViolations(page, "search, after a search");
+    await expectNoSidewaysScroll(page);
+    await expectKeyboardReachable(page);
+  });
+});
+
+test.describe("account with the keyboard only", () => {
+  test("/account passes axe at 320px, every stop has a ring, and an empty delete is caught by keyboard", async ({
+    page,
+    request,
+  }) => {
+    test.setTimeout(180_000);
+    await page.setViewportSize(PHONE);
+    const account = await newAccount(request, "account");
+    await signInViaForm(page, account.email);
+    await expect(page).toHaveURL("/home", { timeout: COLD_START_MS });
+    await page.goto("/account");
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Account" }),
+    ).toBeVisible({ timeout: COLD_START_MS });
+    await waitForHydration(page, 'form[aria-busy] button[type="submit"]');
+
+    await expectNoViolations(page, "account");
+    await expectNoSidewaysScroll(page);
+    await expectKeyboardReachable(page);
+
+    // No password: the field error shows and the field takes focus. Nothing
+    // is deleted, so the account is still there for cleanup.
+    const remove = page.getByRole("button", { name: "Delete my account" });
+    await tabTo(page, remove);
+    await page.keyboard.press("Enter");
+    const password = page.getByLabel("Your password");
+    await expect(password).toBeFocused();
+    await expect(password).toHaveAttribute("aria-invalid", "true");
+    await expect(page.getByText("Enter your password.")).toBeVisible();
+    await expect(page).toHaveURL("/account");
+    await expectNoViolations(page, "account, password missing");
+  });
+});
+
+test.describe("legal pages with the keyboard only", () => {
+  for (const path of ["/privacy", "/terms"]) {
+    test(`${path} passes axe at 320px signed out, and every stop has a ring`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(PHONE);
+      await page.goto(path);
+      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+      await expectNoViolations(page, path);
+      await expectNoSidewaysScroll(page);
+      await expectKeyboardReachable(page);
+
+      // The first "On this page" link moves to its section.
+      const nav = page.getByRole("navigation", { name: "On this page" });
+      const first = nav.getByRole("link").first();
+      await tabTo(page, first);
+      const target = await first.getAttribute("href");
+      await page.keyboard.press("Enter");
+      await expect(page).toHaveURL(new RegExp(`${target}$`));
+    });
+  }
 });

@@ -1,5 +1,7 @@
+import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
-import { account, session, swipeSkips } from "@/db/schema";
+import { account, feedFeedback, session, swipeSkips } from "@/db/schema";
+import { setFeedback } from "@/feedback/feedback";
 import { upsertProfile } from "@/profile/profile";
 import { saveRating } from "@/ratings/save-rating";
 import { saveSwipe } from "@/ratings/save-swipe";
@@ -158,6 +160,60 @@ describe.skipIf(!TEST_DATABASE_URL)("exportUserData (database)", () => {
       onboardedAt: null,
     });
     expect(doc.profile?.termsAcceptedAt).toMatch(/Z$/);
+  });
+
+  it("exports feedback with title, year, kind and ISO time, newest first (spec 0011, AC-14)", async () => {
+    const user = await t.fx.newUser();
+    const [older, newer] = await t.fx.newMovies(2);
+    await setFeedback(t.db, {
+      userId: user.id,
+      movieId: older.id,
+      kind: "not_interested",
+    });
+    await setFeedback(t.db, {
+      userId: user.id,
+      movieId: newer.id,
+      kind: "more_like_this",
+    });
+    await t.db
+      .update(feedFeedback)
+      .set({ createdAt: new Date("2026-03-01T10:00:00.000Z") })
+      .where(eq(feedFeedback.movieId, older.id));
+    await t.db
+      .update(feedFeedback)
+      .set({ createdAt: new Date("2026-04-01T10:00:00.000Z") })
+      .where(eq(feedFeedback.movieId, newer.id));
+
+    const doc = await exported(user.id);
+
+    expect(doc.feedback).toEqual([
+      {
+        movieId: newer.id,
+        title: newer.title,
+        year: newer.releaseYear,
+        kind: "more_like_this",
+        createdAt: "2026-04-01T10:00:00.000Z",
+      },
+      {
+        movieId: older.id,
+        title: older.title,
+        year: older.releaseYear,
+        kind: "not_interested",
+        createdAt: "2026-03-01T10:00:00.000Z",
+      },
+    ]);
+  });
+
+  it("exports an empty feedback list for a user who gave none, and never another user's", async () => {
+    const [owner, other] = [await t.fx.newUser(), await t.fx.newUser()];
+    const [movie] = await t.fx.newMovies(1);
+    await setFeedback(t.db, {
+      userId: other.id,
+      movieId: movie.id,
+      kind: "not_interested",
+    });
+
+    expect((await exported(owner.id)).feedback).toEqual([]);
   });
 
   it("carries one key for every table in the export registry (AC-12)", async () => {

@@ -66,3 +66,33 @@ export const tmdbDiscoverPageSchema = z.object({
 export const tmdbGenreListSchema = z.object({
   genres: z.array(z.object({ id: z.number().int(), name: z.string() })),
 });
+
+const watchProviderSchema = z.object({
+  provider_id: z.number().int(),
+  provider_name: z.string(),
+  logo_path: z.string().nullish(),
+  display_priority: z.number().nullish(),
+});
+
+const watchOffersSchema = z.array(watchProviderSchema).nullish();
+
+/**
+ * `GET /movie/{id}/watch/providers` (spec 0013). Every country TMDB knows the
+ * movie in, keyed by its ISO 3166 code. The data comes from JustWatch.
+ */
+export const tmdbWatchProvidersSchema = z.object({
+  id: z.number().int(),
+  results: z.record(
+    z.string(),
+    z.object({
+      link: z.string().nullish(),
+      flatrate: watchOffersSchema,
+      free: watchOffersSchema,
+      ads: watchOffersSchema,
+      rent: watchOffersSchema,
+      buy: watchOffersSchema,
+    }),
+  ),
+});
+
+export type TmdbWatchProviders = z.infer<typeof tmdbWatchProvidersSchema>;

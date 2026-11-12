@@ -5,6 +5,7 @@ import { toAuthError, toAuthMessage } from "@/auth/auth-errors";
 import { authClient } from "@/auth/client";
 import { nameFromEmail } from "@/auth/name-from-email";
 import { VERIFY_EMAIL_PATH } from "@/auth/paths";
+import { PRIVACY_PATH, TERMS_PATH } from "@/legal/paths";
 import { Field } from "@/ui/field";
 import { Button } from "@/ui/primitives/button";
 import { PasswordField } from "./password-field";
@@ -12,6 +13,24 @@ import { ResendVerificationButton } from "./resend-verification";
 import { readRetryAfter } from "./retry-after";
 import { Turnstile, type TurnstileHandle } from "./turnstile";
 import { type CredentialErrors, validateCredentials } from "./validation";
+
+/**
+ * A link that opens in a new tab, so the form keeps what was typed. Screen
+ * readers hear that it opens a new tab (spec 0014, AC-5).
+ */
+function NewTabLink({ href, children }: { href: string; children: string }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-foreground underline underline-offset-4"
+    >
+      {children}
+      <span className="sr-only"> (opens in a new tab)</span>
+    </a>
+  );
+}
 
 /**
  * Sign up: an email and a password, nothing else (spec 0005, AC-1). A good
@@ -170,6 +189,11 @@ export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string }) {
         error={errors.password}
       />
       <Turnstile ref={turnstile} siteKey={turnstileSiteKey} />
+      <p className="type-small">
+        By creating an account, you agree to the{" "}
+        <NewTabLink href={TERMS_PATH}>Terms of use</NewTabLink> and the{" "}
+        <NewTabLink href={PRIVACY_PATH}>Privacy policy</NewTabLink>.
+      </p>
       <Button type="submit" size="large" disabled={pending}>
         {pending ? "Creating account…" : "Create account"}
       </Button>

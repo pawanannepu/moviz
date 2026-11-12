@@ -94,7 +94,12 @@ describe("handleCatalogCron before it touches anything (AC-10)", () => {
       const text = await response.text();
 
       expect(response.status).toBe(500);
-      expect(JSON.parse(text)).toEqual({ error: "config_missing" });
+      // The purge runs before the config check (spec 0012, AC-16); with a
+      // database that refuses every call it reports null.
+      expect(JSON.parse(text)).toEqual({
+        error: "config_missing",
+        purged: null,
+      });
       expect(text).not.toMatch(/TMDB|VOYAGE|CRON_SECRET|token|key/i);
     }
   });

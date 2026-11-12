@@ -44,6 +44,16 @@ export type VoyageClient = {
     texts: string[],
     options?: { deadline?: number },
   ): Promise<Result<(number[] | null)[], VoyageError>>;
+  /**
+   * Embeds one search phrase as `query` input at 1024 dimensions (spec 0012,
+   * AC-7), in one try with no retry. `timeoutMs` limits that try (default
+   * `VOYAGE_TIMEOUT_MS`). A vector whose length is not 1024 comes back as
+   * `null`. The text goes only into the request body, never into an error.
+   */
+  embedQuery(
+    text: string,
+    options?: { timeoutMs?: number },
+  ): Promise<Result<number[] | null, VoyageError>>;
 };
 
 function toVoyageError(failure: HttpFailure): VoyageError {
@@ -63,17 +73,46 @@ function toVoyageError(failure: HttpFailure): VoyageError {
 
 /** Builds a Voyage client. Nothing is fetched until a method is called. */
 export function createVoyageClient(options: VoyageClientOptions): VoyageClient {
+  const headers = {
+    Authorization: `Bearer ${options.apiKey}`,
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  };
   return {
+    async embedQuery(text, requestOptions = {}) {
+      const result = await requestJson(
+        {
+          url: new URL(options.endpoint ?? ENDPOINT),
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            input: [text],
+            model: EMBEDDING_MODEL,
+            input_type: "query",
+            output_dimension: EMBEDDING_DIMENSIONS,
+          }),
+          schema: embeddingsResponseSchema,
+          timeoutMs: requestOptions.timeoutMs ?? VOYAGE_TIMEOUT_MS,
+          maxAttempts: 1,
+        },
+        options,
+      );
+      if (!result.ok) return err(toVoyageError(result.error));
+      const [item, ...rest] = result.value.data;
+      if (!item || rest.length > 0 || item.index !== 0) {
+        return err({ code: "voyage_bad_shape" });
+      }
+      return ok(
+        item.embedding.length === EMBEDDING_DIMENSIONS ? item.embedding : null,
+      );
+    },
+
     async embedDocuments(texts, requestOptions = {}) {
       const result = await requestJson(
         {
           url: new URL(options.endpoint ?? ENDPOINT),
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${options.apiKey}`,
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
+          headers,
           body: JSON.stringify({
             input: texts,
             model: EMBEDDING_MODEL,

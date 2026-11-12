@@ -22,6 +22,7 @@ export const EXPORT_KEY_BY_TABLE = {
   imports: "imports",
   watchlist_entries: "watchlist",
   feed_feedback: "feedback",
+  search_usage: "searchUsage",
 } as const;
 
 /** Every table in the Drizzle schema that has a `user_id` column. */

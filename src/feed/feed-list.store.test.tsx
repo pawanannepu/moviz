@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -176,6 +177,98 @@ describe("FeedList card links (AC-12)", () => {
     fireEvent.click(cardLink(2));
 
     expect(store.opened).toBe(2);
+  });
+});
+
+describe("FeedList feedback and the kept feed (spec 0011, AC-15)", () => {
+  const saved = () =>
+    setFeedbackAction.mockImplementation(async ({ kind }: { kind: unknown }) =>
+      ok({ kind }),
+    );
+  const hide = async (id: number) => {
+    await act(async () =>
+      fireEvent.click(
+        screen.getByRole("button", { name: `Not interested in Movie ${id}` }),
+      ),
+    );
+  };
+
+  it("leaves a pick hidden on the feed out of the restored list, with no Hidden line", async () => {
+    saved();
+    const feed = openFeed();
+    await hide(2);
+    expect(screen.getByText("Hidden from your picks.")).toBeTruthy();
+
+    feed.leave();
+    feed.comeBack();
+
+    expect(shownIds()).toEqual([1, 3]);
+    expect(screen.queryByText("Hidden from your picks.")).toBeNull();
+  });
+
+  it("keeps the first batch ids, so the restore still matches", async () => {
+    saved();
+    const feed = openFeed();
+    await hide(2);
+
+    feed.leave();
+
+    expect(store.read("user-1", [1, 2, 3])?.hiddenIds).toEqual([2]);
+    expect(store.read("user-1", [1, 2, 3])?.seedIds).toEqual([1, 2, 3]);
+  });
+
+  it("brings back a pressed More like this after a return", async () => {
+    saved();
+    const feed = openFeed();
+    await act(async () =>
+      fireEvent.click(
+        screen.getByRole("button", { name: "More like this: Movie 1" }),
+      ),
+    );
+
+    feed.leave();
+    feed.comeBack();
+
+    expect(
+      screen
+        .getByRole("button", { name: "More like this: Movie 1" })
+        .getAttribute("aria-pressed"),
+    ).toBe("true");
+  });
+
+  it("follows changes made on the movie page: hidden, pressed, and back after Undo", () => {
+    const feed = openFeed();
+    feed.leave();
+    store.recordFeedback(3, "not_interested");
+    store.recordFeedback(1, "more_like_this");
+
+    feed.comeBack();
+    expect(shownIds()).toEqual([1, 2]);
+    expect(
+      screen
+        .getByRole("button", { name: "More like this: Movie 1" })
+        .getAttribute("aria-pressed"),
+    ).toBe("true");
+
+    feed.leave();
+    store.recordFeedback(3, null);
+    feed.comeBack();
+    expect(shownIds()).toEqual([1, 2, 3]);
+  });
+
+  it("still sends a hidden pick's id as shown on the next Load more", async () => {
+    saved();
+    loadMoreAction.mockResolvedValue(ok({ picks: picks([4]), done: false }));
+    const feed = openFeed();
+    await hide(2);
+    feed.leave();
+    feed.comeBack();
+
+    press();
+
+    await waitFor(() =>
+      expect(loadMoreAction).toHaveBeenCalledWith({ shown: [1, 2, 3] }),
+    );
   });
 });
 

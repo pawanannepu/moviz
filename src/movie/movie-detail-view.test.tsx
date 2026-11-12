@@ -408,3 +408,119 @@ describe("MovieDetailView accessibility (AC-18)", () => {
     ).toBe("true");
   });
 });
+
+describe("MovieDetailView feedback controls (spec 0011, AC-11)", () => {
+  it("shows both controls right under the poster and its reason, before the title", () => {
+    const { container } = render(
+      <MovieDetailView
+        movie={heat}
+        movieId={42}
+        reason={REASON}
+        feedback={{ kind: null }}
+      />,
+    );
+
+    const bar = container.querySelector('[data-slot="subtitle-bar"]');
+    const controls = container.querySelector('[data-slot="feedback-controls"]');
+    const title = screen.getByRole("heading", { level: 1, name: "Heat" });
+    if (!bar || !controls) throw new Error("expected the bar and the controls");
+    const follows = (first: Node, second: Node) =>
+      (first.compareDocumentPosition(second) &
+        Node.DOCUMENT_POSITION_FOLLOWING) !==
+      0;
+    expect(follows(bar, controls)).toBe(true);
+    expect(follows(controls, title)).toBe(true);
+    expect(
+      screen.getByRole("button", { name: "More like this: Heat" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Not interested in Heat" }),
+    ).toBeTruthy();
+  });
+
+  it("opens in the hidden state with Undo for a dismissed movie", () => {
+    render(
+      <MovieDetailView
+        movie={heat}
+        movieId={42}
+        reason={null}
+        feedback={{ kind: "not_interested" }}
+      />,
+    );
+
+    expect(screen.getByText("Hidden from your picks.")).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Undo hiding Heat" }),
+    ).toBeTruthy();
+  });
+
+  it("shows no controls without feedback, or without a movie id", () => {
+    const none = render(
+      <MovieDetailView movie={heat} movieId={42} reason={REASON} />,
+    );
+    expect(
+      none.container.querySelector('[data-slot="feedback-controls"]'),
+    ).toBeNull();
+    cleanup();
+
+    const noId = render(
+      <MovieDetailView
+        movie={heat}
+        reason={REASON}
+        feedback={{ kind: null }}
+      />,
+    );
+    expect(
+      noId.container.querySelector('[data-slot="feedback-controls"]'),
+    ).toBeNull();
+  });
+
+  it("has no accessibility violations with the controls, shown or hidden", async () => {
+    const shown = render(
+      <MovieDetailView
+        movie={heat}
+        movieId={42}
+        reason={REASON}
+        feedback={{ kind: "more_like_this" }}
+      />,
+    );
+    expect(await axeViolations(shown.container)).toEqual([]);
+    cleanup();
+    const hidden = render(
+      <MovieDetailView
+        movie={heat}
+        movieId={42}
+        reason={null}
+        feedback={{ kind: "not_interested" }}
+      />,
+    );
+    expect(await axeViolations(hidden.container)).toEqual([]);
+  });
+});
+
+describe("MovieDetailView afterOverview slot (spec 0013, AC-1)", () => {
+  it("shows the slot after the synopsis and before the director line", () => {
+    const { container } = render(
+      <MovieDetailView
+        movie={heat}
+        reason={null}
+        afterOverview={<section data-slot="slot">Where to watch</section>}
+      />,
+    );
+
+    const order = [
+      ...container.querySelectorAll(
+        '[data-slot="movie-overview"], [data-slot="slot"], [data-slot="movie-directors"]',
+      ),
+    ].map((el) => el.getAttribute("data-slot"));
+    expect(order).toEqual(["movie-overview", "slot", "movie-directors"]);
+  });
+
+  it("shows nothing extra when no slot is passed", () => {
+    const { container } = render(
+      <MovieDetailView movie={heat} reason={null} />,
+    );
+
+    expect(container.querySelector('[data-slot="slot"]')).toBeNull();
+  });
+});

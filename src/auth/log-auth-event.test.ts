@@ -79,3 +79,23 @@ describe("logAuthEvent", () => {
     ).not.toThrow();
   });
 });
+
+// Spec 0014, AC-7 and AC-14: the data download gets a line with ids only.
+describe("formatAuthEvent data_exported (spec 0014, AC-7, AC-14)", () => {
+  it("holds the event, outcome, time and user id, and nothing else", () => {
+    const line = JSON.parse(
+      formatAuthEvent(
+        { event: "data_exported", outcome: "ok", userId: "u_123" },
+        NOW,
+      ),
+    );
+
+    expect(line).toEqual({
+      type: "auth",
+      event: "data_exported",
+      outcome: "ok",
+      at: "2026-11-09T06:30:00.000Z",
+      userId: "u_123",
+    });
+  });
+});

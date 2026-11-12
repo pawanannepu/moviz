@@ -1,6 +1,7 @@
 import { DrizzleQueryError } from "drizzle-orm/errors";
 import { describe, expect, it } from "vitest";
 import type { Db } from "@/db/create-db";
+import { setFeedback } from "@/feedback/feedback";
 import {
   capturingDb,
   useRecommendFixtures,
@@ -337,6 +338,80 @@ describe.skipIf(!TEST_DATABASE_URL)("reasonFor", () => {
       } finally {
         await capture.pool.end();
       }
+    });
+  });
+
+  describe("More like this (spec 0011)", () => {
+    it("AC-8: names a More like this anchor with the new reason kind, the same one the feed gives", async () => {
+      const [asked, close] = await fx.addMovies([
+        { vector: vec([[A, 1]]), releaseDate: "1995-12-15" },
+        { vector: between(0.95, 0, fx.privateDim()) },
+      ]);
+      const userId = await newUserId();
+      await setFeedback(ctx.db, {
+        userId,
+        movieId: asked,
+        kind: "more_like_this",
+      });
+
+      const page = await reason(userId, close);
+      const feed = await recommendMovies(ctx.db, { userId, limit: 50 });
+
+      expect(page).toMatchObject({
+        kind: "more_like_this",
+        anchor: { movieId: asked, releaseYear: 1995 },
+      });
+      if (!feed.ok) throw new Error("recommendMovies failed");
+      expect(
+        feed.value.picks.find((p) => p.movie.id === close)?.reason,
+      ).toEqual(page);
+    });
+
+    it("AC-7: never names the page's own movie as its anchor", async () => {
+      const [loved, asked] = await fx.addMovies([
+        { vector: vec([[B, 1]]) },
+        { vector: between(0, 0.5, fx.privateDim()) },
+      ]);
+      const userId = await newUserId();
+      await fx.rate(userId, [{ movieId: loved, score: 10 }]);
+      await setFeedback(ctx.db, {
+        userId,
+        movieId: asked,
+        kind: "more_like_this",
+      });
+
+      expect(await reason(userId, asked)).toMatchObject({
+        kind: "similar_to_liked",
+        anchor: { movieId: loved },
+      });
+    });
+
+    it("AC-7: gives popular for a movie whose only anchor is itself", async () => {
+      const asked = await fx.addMovie({ vector: vec([[A, 1]]) });
+      const userId = await newUserId();
+      await setFeedback(ctx.db, {
+        userId,
+        movieId: asked,
+        kind: "more_like_this",
+      });
+
+      expect(await reason(userId, asked)).toEqual({ kind: "popular" });
+    });
+
+    it("AC-4: gives no reason for a movie marked not interested", async () => {
+      const [loved, dismissed] = await fx.addMovies([
+        { vector: vec([[A, 1]]) },
+        { vector: between(0.9, 0, fx.privateDim()) },
+      ]);
+      const userId = await newUserId();
+      await fx.rate(userId, [{ movieId: loved, score: 9 }]);
+      await setFeedback(ctx.db, {
+        userId,
+        movieId: dismissed,
+        kind: "not_interested",
+      });
+
+      expect(await reason(userId, dismissed)).toBeNull();
     });
   });
 });

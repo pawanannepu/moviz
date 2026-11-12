@@ -30,7 +30,7 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 15 | Bite search (mood and vibe) | Slice 7 | in-progress |
 | 16 | Where to watch | Slice 8 | in-progress |
 | 17 | Privacy & legal basics | Slice 9 | in-progress |
-| 18 | Accessibility pass | Slice 9 | planned |
+| 18 | Accessibility pass | Slice 9 | in-progress |
 
 ## Foundations
 
@@ -216,37 +216,37 @@ spec [0011](../specs/0011-feed-feedback/index.md) · code in `src/feedback/`, `s
   - [x] "More like this" toggle and the recommender's feedback anchors and reason (AC-1, AC-5, AC-6, AC-7, AC-8, AC-9, AC-10)
   - [x] Movie page controls and the kept feed (AC-11, AC-15)
   - [x] Browser and accessibility pass (AC-1 to AC-15)
-- [ ] Verify it: `/check verify feed feedback`
-- [ ] Test it: `/test feed feedback`
+- [x] Verify it: `/check verify feed feedback`
+- [x] Test it: `/test feed feedback`
 
 ## Slice 7: Bite search
 
 ### 15. Bite search (mood and vibe)
 Type a short phrase like "something short and funny tonight" and get a few matching picks, shaped by the user's taste, each with a reason.
 **Done when:** a short phrase returns a small set of relevant movies the user has not rated, each with a reason; empty, slow, and failed searches are handled.
-spec [0012](../specs/0012-bite-search/index.md)
+spec [0012](../specs/0012-bite-search/index.md) · code in `src/search/`, `src/app/(protected)/search/`, `src/user-data/purge-old-rows.ts`
 - [x] Design it (spec): `/architect bite search`
-- [ ] Build it: `/develop bite search`
-  - [ ] Migration 5, the quota, export and delete (AC-3, AC-15)
-  - [ ] Thread: Voyage query embedding, scoring, the action and the `/search` page with cards (AC-1, AC-2, AC-6, AC-11, AC-14)
-  - [ ] Word rules, the "Looking for" line, the taste blend and reasons (AC-4, AC-5, AC-7, AC-8)
-  - [ ] Failure strand: words mode, time budget, quota, empty and error states, kept results (AC-3, AC-9, AC-10, AC-12, AC-13)
-  - [ ] Purge in the daily cron, privacy and browser pass (AC-15, AC-16)
-- [ ] Verify it: `/check verify bite search`
-- [ ] Test it: `/test bite search`
+- [x] Build it: `/develop bite search`
+  - [x] Migration 5, the quota, export and delete (AC-3, AC-15)
+  - [x] Thread: Voyage query embedding, scoring, the action and the `/search` page with cards (AC-1, AC-2, AC-6, AC-11, AC-14)
+  - [x] Word rules, the "Looking for" line, the taste blend and reasons (AC-4, AC-5, AC-7, AC-8)
+  - [x] Failure strand: words mode, time budget, quota, empty and error states, kept results (AC-3, AC-9, AC-10, AC-12, AC-13)
+  - [x] Purge in the daily cron, privacy and browser pass (AC-15, AC-16)
+- [x] Verify it: `/check verify bite search`
+- [x] Test it: `/test bite search`
 
 ## Slice 8: Where to watch
 
 ### 16. Where to watch
 Show which streaming services carry a movie in the user's country, on the movie detail page (feed cards are deferred).
 **Done when:** a movie shows the services that carry it for the user's country, or a clear "not found on streaming" state, and the data source is credited as required.
-spec [0013](../specs/0013-where-to-watch/index.md)
+spec [0013](../specs/0013-where-to-watch/index.md) · code in `src/watch/`
 - [x] Design it (spec): `/architect where to watch`
-- [ ] Build it: `/develop where to watch`
-  - [ ] Migration 6 and the TMDB watch providers call (AC-7, AC-11)
-  - [ ] Thread: the cached read and the section on the movie page with the credit (AC-1, AC-2, AC-3, AC-4, AC-7)
-  - [ ] Country: IP default, the picker and its action (AC-5, AC-6, AC-10)
-  - [ ] Failure strand, accessibility and the browser pass (AC-8, AC-9, AC-12)
+- [x] Build it: `/develop where to watch`
+  - [x] Migration 6 and the TMDB watch providers call (AC-7, AC-11)
+  - [x] Thread: the cached read and the section on the movie page with the credit (AC-1, AC-2, AC-3, AC-4, AC-7)
+  - [x] Country: IP default, the picker and its action (AC-5, AC-6, AC-10)
+  - [x] Failure strand, accessibility and the browser pass (AC-8, AC-9, AC-12)
 - [ ] Verify it: `/check verify where to watch`
 - [ ] Test it: `/test where to watch`
 
@@ -255,23 +255,24 @@ spec [0013](../specs/0013-where-to-watch/index.md)
 ### 17. Privacy & legal basics · GA
 Privacy policy, terms, and the controls for personal data: export my data and delete my account.
 **Done when:** policy and terms pages are linked from sign up, a user can download their data and delete their account with all their ratings removed, and a signup consent line is present.
-spec [0014](../specs/0014-privacy-legal-basics/index.md)
+spec [0014](../specs/0014-privacy-legal-basics/index.md) · code in `src/legal/`, `src/account/`
 - [x] Design it (spec): `/architect privacy & legal basics`
-- [ ] Build it: `/develop privacy & legal basics`
-  - [ ] Thread: policy and terms pages, footer links, sign up consent line, terms version (AC-1, AC-2, AC-3, AC-4, AC-5)
-  - [ ] Launch check on the legal details (AC-12)
-  - [ ] Account page, country and the data export (AC-6, AC-7, AC-8, AC-14)
-  - [ ] Delete account with its rate limit, and retention (AC-9, AC-10, AC-11, AC-13)
-  - [ ] Browser and accessibility pass (AC-1 to AC-14)
-- [ ] Verify it: `/check verify privacy & legal basics`
-- [ ] Test it: `/test privacy & legal basics`
+- [x] Build it: `/develop privacy & legal basics`
+  - [x] Thread: policy and terms pages, footer links, sign up consent line, terms version (AC-1, AC-2, AC-3, AC-4, AC-5)
+  - [x] Launch check on the legal details (AC-12)
+  - [x] Account page, country and the data export (AC-6, AC-7, AC-8, AC-14)
+  - [x] Delete account with its rate limit, and retention (AC-9, AC-10, AC-11, AC-13)
+  - [x] Browser and accessibility pass (AC-1 to AC-14)
+- [x] Verify it: `/check verify privacy & legal basics`
+- [x] Test it: `/test privacy & legal basics`
 - [ ] Review it (fresh model): `/check review privacy & legal basics`
 - [ ] Document it: `/document privacy & legal basics`
 
 ### 18. Accessibility pass
 A final sweep that every screen meets WCAG AA: keyboard, screen reader labels, contrast, and focus, including swipe via buttons.
 **Done when:** every screen can be used with keyboard only, passes an automated accessibility scan, and swipe actions have labelled button equivalents.
-- [ ] Build it: `/develop accessibility pass`
+code in `e2e/auth/accessibility.spec.ts`, `src/app/not-found.tsx`, `src/watchlist/`, `src/app/(protected)/lists/`
+- [x] Build it: `/develop accessibility pass`
 
 ## Deferred
 Out of scope for this build pass, kept so the plan stays honest.

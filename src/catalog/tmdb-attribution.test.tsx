@@ -33,3 +33,25 @@ describe("TmdbAttribution (AC-14)", () => {
     expect(html).toContain("type-brand");
   });
 });
+
+// Spec 0014, AC-4: the legal links live inside this one footer, above the notice.
+describe("TmdbAttribution legal links (spec 0014, AC-4)", () => {
+  const html = renderToStaticMarkup(<TmdbAttribution />);
+
+  it("has a Legal nav with Privacy and Terms links", () => {
+    expect(html).toMatch(/<nav aria-label="Legal">/);
+    expect(html).toMatch(/<a[^>]*href="\/privacy"[^>]*>Privacy<\/a>/);
+    expect(html).toMatch(/<a[^>]*href="\/terms"[^>]*>Terms<\/a>/);
+  });
+
+  it("keeps a single footer landmark", () => {
+    expect(html.match(/<footer/g)).toHaveLength(1);
+    expect(html.indexOf("<nav")).toBeLessThan(html.indexOf("</footer>"));
+  });
+
+  it("puts the links above the TMDB notice", () => {
+    expect(html.indexOf('aria-label="Legal"')).toBeLessThan(
+      html.indexOf(TMDB_NOTICE),
+    );
+  });
+});
