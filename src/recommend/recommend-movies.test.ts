@@ -673,11 +673,20 @@ describe.skipIf(!TEST_DATABASE_URL)("recommendMovies", () => {
       await fx.rate(alice, [{ movieId: likedA, score: 9 }]);
       await fx.rate(bob, [{ movieId: likedB, score: 9 }]);
 
-      const aliceResult = await recommend({ userId: alice, limit: 1 });
-      const bobResult = await recommend({ userId: bob, limit: 1 });
+      // A full page, so a stranger on the shared branch that sits on the same
+      // anchor dimension (for example a movie left by an interrupted run) cannot
+      // take the only slot before `recommend` cuts the list to this test's movies.
+      const aliceResult = await recommend({ userId: alice, limit: 50 });
+      const bobResult = await recommend({ userId: bob, limit: 50 });
 
-      expect(idsOf(aliceResult)).toEqual([nearA]);
-      expect(idsOf(bobResult)).toEqual([nearB]);
+      expect(idsOf(aliceResult)[0]).toBe(nearA);
+      expect(idsOf(bobResult)[0]).toBe(nearB);
+      const anchorsOf = (value: Recommendations) =>
+        value.picks.map((p) =>
+          p.reason.kind === "similar_to_liked" ? p.reason.anchor.movieId : null,
+        );
+      expect(new Set(anchorsOf(aliceResult))).toEqual(new Set([likedA]));
+      expect(new Set(anchorsOf(bobResult))).toEqual(new Set([likedB]));
     });
 
     it("AC-16 AC-17 AC-19: runs the same number of reads in one read only repeatable read transaction whatever the ratings and limit", async () => {
