@@ -1,24 +1,23 @@
 /**
  * The legal details the privacy policy and the terms show (spec 0014, AC-12).
  *
- * Fill the three placeholders below before the first production deploy. A
- * production build on Vercel fails until they are filled (`next.config.ts`
- * calls `assertLegalDetailsForBuild`). This file has no imports on purpose:
- * `next.config.ts` loads it by relative path, where the `@/` alias does not
- * work.
+ * A production build on Vercel fails if these values are still unfilled
+ * (`next.config.ts` calls `assertLegalDetailsForBuild`). This file has no
+ * imports on purpose: `next.config.ts` loads it by relative path, where the
+ * `@/` alias does not work.
  */
 
-/** Who runs Moviz, as it should read in the policy. Placeholder until filled. */
-export const OPERATOR_NAME: string = "OPERATOR_NAME";
+/** Who runs Moviz, as it should read in the policy. */
+export const OPERATOR_NAME: string = "Annepu Pawan Kumar";
 
-/** Where people write about their data or the terms. Placeholder until filled. */
-export const CONTACT_EMAIL: string = "CONTACT_EMAIL";
+/** Where people write about their data or the terms. */
+export const CONTACT_EMAIL: string = "pkpawanasn@gmail.com";
 
 /**
  * How many days deleted data can survive in database backups: the point in
- * time restore window of the Neon plan (Neon console). `null` until filled.
+ * time restore window of the Neon plan (Neon console).
  */
-export const BACKUP_RETENTION_DAYS: number | null = null;
+export const BACKUP_RETENTION_DAYS: number | null = 7;
 
 /**
  * The date the policy and terms last changed, `YYYY-MM-DD`. It is also the

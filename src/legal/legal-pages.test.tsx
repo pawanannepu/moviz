@@ -10,8 +10,8 @@ import {
 } from "@/user-data/purge-old-rows";
 import { LegalDocument } from "./legal-document";
 import {
+  BACKUP_RETENTION_DAYS,
   CONTACT_EMAIL,
-  LEGAL_PLACEHOLDER_TEXT,
   LEGAL_UPDATED_ON,
   OPERATOR_NAME,
 } from "./operator";
@@ -219,26 +219,26 @@ describe("the privacy policy (AC-2)", () => {
   });
 });
 
-describe("placeholder legal details (AC-12)", () => {
-  it("shows the placeholder text, never the raw constant names", () => {
+describe("configured legal details (AC-12)", () => {
+  it("shows the configured details, never the raw constant names", () => {
     renderPrivacy();
     const text = document.body.textContent ?? "";
 
-    expect(OPERATOR_NAME).toBe("OPERATOR_NAME");
-    expect(CONTACT_EMAIL).toBe("CONTACT_EMAIL");
-    expect(sectionText("who-runs-moviz")).toContain(LEGAL_PLACEHOLDER_TEXT);
+    expect(sectionText("who-runs-moviz")).toContain(OPERATOR_NAME);
     expect(sectionText("how-long-we-keep-it")).toContain(
-      `up to ${LEGAL_PLACEHOLDER_TEXT} after`,
+      `up to ${BACKUP_RETENTION_DAYS} days after`,
     );
     expect(text).not.toContain("OPERATOR_NAME");
     expect(text).not.toContain("CONTACT_EMAIL");
     expect(text).not.toContain("BACKUP_RETENTION_DAYS");
   });
 
-  it("renders no mail link while the contact email is a placeholder", () => {
+  it("links to the configured contact email", () => {
     renderPrivacy();
 
-    expect(document.querySelector('a[href^="mailto:"]')).toBeNull();
+    expect(
+      document.querySelector('a[href^="mailto:"]')?.getAttribute("href"),
+    ).toBe(`mailto:${CONTACT_EMAIL}`);
   });
 });
 
@@ -296,6 +296,6 @@ describe("the terms (AC-3)", () => {
   it("ends with the contact section", () => {
     renderTerms();
 
-    expect(sectionText("contact")).toContain(LEGAL_PLACEHOLDER_TEXT);
+    expect(sectionText("contact")).toContain(CONTACT_EMAIL);
   });
 });

@@ -41,12 +41,8 @@ describe("missingLegalDetails (AC-12)", () => {
     ).toEqual(["OPERATOR_NAME", "BACKUP_RETENTION_DAYS"]);
   });
 
-  it("reports the shipped placeholders today", () => {
-    expect(missingLegalDetails()).toEqual([
-      "OPERATOR_NAME",
-      "CONTACT_EMAIL",
-      "BACKUP_RETENTION_DAYS",
-    ]);
+  it("accepts the configured legal details", () => {
+    expect(missingLegalDetails()).toEqual([]);
   });
 });
 
